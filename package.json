@@ -1,7 +1,11 @@
 {
   "name": "vortel-tracker-v2",
   "version": "1.0.0",
+  "dependencies": {
+    "http-server": "^14.1.1"
+  },
   "scripts": {
-    "start": "python3 -m http.server $PORT"
+    "start": "npx http-server -p $PORT"
   }
 }
+
