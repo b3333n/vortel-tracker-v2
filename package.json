@@ -1,0 +1,7 @@
+{
+  "name": "vortel-tracker-v2",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "python3 -m http.server $PORT"
+  }
+}
