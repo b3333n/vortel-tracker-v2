@@ -18,8 +18,14 @@
         }
         
         .container {
-            max-width: 900px;
+            max-width: 500px;
             margin: 0 auto;
+        }
+        
+        @media (min-width: 768px) {
+            .container {
+                max-width: 500px;
+            }
         }
         
         /* Header */
@@ -272,11 +278,15 @@
         .target-icon.duell { background: #2196F3; }
         
         .target-hint {
-            color: #888;
             font-size: 0.85rem;
             font-weight: normal;
             margin-left: 8px;
         }
+        
+        .target-hint.red-hint { color: #f44336; }
+        .target-hint.green-hint { color: #4CAF50; }
+        .target-hint.black-hint { color: #888; }
+        .target-hint.duell-hint { color: #2196F3; }
         
         .shots-grid {
             display: grid;
@@ -963,7 +973,7 @@
                     <div class="target-section">
                         <div class="target-header">
                             <div class="target-icon red">🔴</div>
-                            <div>Rote Scheibe <span class="target-hint">(nur 10 oder 0)</span></div>
+                            <div>Rote Scheibe <span class="target-hint red-hint">(nur 10 oder 0)</span></div>
                         </div>
                         <div class="shots-grid" id="red-grid"></div>
                         <div class="target-total">
@@ -975,7 +985,7 @@
                     <div class="target-section">
                         <div class="target-header">
                             <div class="target-icon green">🟢</div>
-                            <div>Grüne Scheibe <span id="green-shot-count" class="target-hint">(15 Schuss)</span></div>
+                            <div>Grüne Scheibe <span id="green-shot-count" class="target-hint green-hint">(15 Schuss)</span></div>
                         </div>
                         <div class="shots-grid" id="green-grid"></div>
                         <div class="target-total">
@@ -987,7 +997,7 @@
                     <div class="target-section">
                         <div class="target-header">
                             <div class="target-icon black">⚫</div>
-                            <div>Schwarze Scheibe <span class="target-hint">(10 Schuss)</span></div>
+                            <div>Schwarze Scheibe <span class="target-hint black-hint">(10 Schuss)</span></div>
                         </div>
                         <div class="shots-grid" id="black-grid"></div>
                         <div class="target-total">
@@ -999,13 +1009,13 @@
                     <div class="target-section" id="duell-section">
                         <div class="target-header">
                             <div class="target-icon duell">⚔️</div>
-                            <div>Duell <span id="duell-shot-count" class="target-hint">(15 Schuss)</span></div>
+                            <div>Duell <span id="duell-shot-count" class="target-hint duell-hint">(15 Schuss)</span></div>
                         </div>
                         
                         <!-- Duell Mode Toggle -->
                         <div class="duell-mode-toggle">
-                            <button type="button" class="mode-btn active" id="mode-shots" onclick="setDuellMode('shots')">Einzelne Schüsse</button>
-                            <button type="button" class="mode-btn" id="mode-total" onclick="setDuellMode('total')">Gesamtpunktzahl</button>
+                            <button type="button" class="mode-btn active" id="mode-total" onclick="setDuellMode('total')">Gesamtpunktzahl</button>
+                            <button type="button" class="mode-btn" id="mode-shots" onclick="setDuellMode('shots')">Einzelwerte</button>
                         </div>
                         
                         <!-- Shots Mode -->
@@ -1681,7 +1691,7 @@
         // State
         let currentDiscipline = 'KK';
         let currentSessionType = 'VO';
-        let duellMode = 'shots';
+        let duellMode = 'total';
         let waitForTenTimer = null;
         
         // Disziplin-Konfiguration (wie in V1)
@@ -1809,6 +1819,9 @@
                     duellGrid.innerHTML += `<input type="tel" class="shot-input" id="duell-${i}" placeholder="${i}" onchange="validateAndCalculate(this, false)" oninput="autoTab(this)">`;
                 }
             }
+            
+            // Set default duell mode to total
+            setDuellMode('total');
         }
         
         // Auto-Tab Logik (wie in V1)
@@ -1936,18 +1949,26 @@
                 document.getElementById('duell-total-display').textContent = duellTotal;
                 document.getElementById('summary-duell').textContent = duellTotal;
                 document.getElementById('summary-duell-row').style.display = 'flex';
+                
+                // Combined (Grün + Duell) - nur bei KK/GK
+                const combined = greenTotal + duellTotal;
+                document.getElementById('summary-combined').textContent = combined;
+                document.getElementById('summary-combined-label').textContent = '🟢 Grün + ⚔️ Duell';
+                document.getElementById('summary-combined').parentElement.style.display = 'flex';
+                
+                // Total
+                const total = redTotal + greenTotal + blackTotal + duellTotal;
+                document.getElementById('summary-total').textContent = total;
             } else {
+                // VL: Kein Duell
                 document.getElementById('summary-duell-row').style.display = 'none';
+                document.getElementById('summary-combined').textContent = greenTotal;
+                document.getElementById('summary-combined-label').textContent = '🟢 Grün';
+                
+                // Total ohne Duell
+                const total = redTotal + greenTotal + blackTotal;
+                document.getElementById('summary-total').textContent = total;
             }
-            
-            // Combined (Grün + Duell)
-            const combined = greenTotal + duellTotal;
-            document.getElementById('summary-combined').textContent = combined;
-            
-            // Total
-            const total = redTotal + greenTotal + blackTotal + duellTotal;
-            document.getElementById('summary-total').textContent = total;
-        }
         
         // Save Session
         async function saveSession() {
