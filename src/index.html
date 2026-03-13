@@ -206,6 +206,42 @@
             font-size: 0.9rem;
         }
         
+        /* Profile Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal {
+            background: #2d2d44;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-title {
+            font-size: 1.3rem;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        
+        .modal-subtitle {
+            color: #888;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        
         @media (max-width: 600px) {
             .nav {
                 justify-content: center;
@@ -302,6 +338,34 @@
                 </div>
             </div>
         </div>
+
+        <!-- Profile Setup Modal -->
+        <div id="profile-modal" class="modal-overlay" style="display: none;">
+            <div class="modal">
+                <div class="modal-title">👤 Profil vervollständigen</div>
+                <div class="modal-subtitle">Bitte gib deine Schützen-Daten ein, um fortzufahren.</div>
+                <div id="profile-message"></div>
+                <form id="profile-form">
+                    <div class="form-group">
+                        <label class="form-label">Vorname *</label>
+                        <input type="text" id="profile-firstname" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nachname *</label>
+                        <input type="text" id="profile-lastname" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Schützennummer</label>
+                        <input type="text" id="profile-shooter-id" class="form-input" placeholder="z.B. 01234">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Verein</label>
+                        <input type="text" id="profile-club" class="form-input" placeholder="z.B. SG München-Nord">
+                    </div>
+                    <button type="submit" class="btn btn-primary">💾 Speichern</button>
+                </form>
+            </div>
+        </div>
     </div>
 
     <!-- Config -->
@@ -347,10 +411,71 @@
             
             if (session) {
                 currentUser = session.user;
-                showMainContent();
+                // Check if profile exists
+                const hasProfile = await checkProfile();
+                if (hasProfile) {
+                    showMainContent();
+                } else {
+                    showProfileModal();
+                }
             } else {
                 showAuthSection();
             }
+        }
+        
+        // Check if user profile exists
+        async function checkProfile() {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('user_id', currentUser.id)
+                .single();
+            
+            return !!data;
+        }
+        
+        // Show profile setup modal
+        function showProfileModal() {
+            document.getElementById('profile-modal').style.display = 'flex';
+            authSection.style.display = 'none';
+            mainContent.classList.remove('active');
+        }
+        
+        // Hide profile modal
+        function hideProfileModal() {
+            document.getElementById('profile-modal').style.display = 'none';
+        }
+        
+        // Profile form handler
+        document.getElementById('profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const firstname = document.getElementById('profile-firstname').value;
+            const lastname = document.getElementById('profile-lastname').value;
+            const shooterId = document.getElementById('profile-shooter-id').value;
+            const club = document.getElementById('profile-club').value;
+            
+            const { error } = await supabase
+                .from('profiles')
+                .insert({
+                    user_id: currentUser.id,
+                    firstname: firstname,
+                    lastname: lastname,
+                    shooter_id: shooterId || null,
+                    club: club || null
+                });
+            
+            if (error) {
+                showProfileMessage('error', 'Fehler: ' + error.message);
+            } else {
+                hideProfileModal();
+                showMainContent();
+            }
+        });
+        
+        // Show profile message
+        function showProfileMessage(type, text) {
+            document.getElementById('profile-message').innerHTML = `<div class="message ${type}">${text}</div>`;
         }
         
         // Show auth section
