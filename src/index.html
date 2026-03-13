@@ -682,14 +682,21 @@
         
         .stats-grid {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
             margin-bottom: 20px;
         }
         
-        @media (min-width: 600px) {
+        @media (max-width: 500px) {
             .stats-grid {
                 grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+            .chart-card {
+                padding: 15px 10px;
+            }
+            .chart-title {
+                font-size: 0.9rem;
             }
         }
         
@@ -2154,21 +2161,33 @@
             const currentYearSessions = sessions.filter(s => new Date(s.date).getFullYear() === currentYear);
             const prevYearSessions = sessions.filter(s => new Date(s.date).getFullYear() === prevYear);
             
-            // Calculate top 10 average for each year
+            // Calculate top 10 average for each year (only scoring points: green+duell or green+red)
             const calcTop10Avg = (yearSessions) => {
                 if (yearSessions.length === 0) return null;
                 
+                const config = DISCIPLINE_CONFIG[statsDiscipline];
+                
                 const totals = yearSessions.map(s => {
-                    let total = 0;
+                    let greenTotal = 0, redTotal = 0, duellTotal = 0;
+                    
                     if (s.results) {
                         s.results.forEach(r => {
-                            total += r.value;
+                            if (r.target_type === 'green') greenTotal += r.value;
+                            else if (r.target_type === 'red') redTotal += r.value;
+                            else if (r.target_type === 'duell') duellTotal += r.value;
                         });
                     }
+                    
                     if (s.duell_totals && s.duell_totals.length > 0) {
-                        total += s.duell_totals[0].total;
+                        duellTotal = s.duell_totals[0].total;
                     }
-                    return total;
+                    
+                    // KK/GK: Grün + Duell, VL: Grün + Rot
+                    if (config.hasDuell) {
+                        return greenTotal + duellTotal;
+                    } else {
+                        return greenTotal + redTotal;
+                    }
                 });
                 
                 const top10 = totals.sort((a, b) => b - a).slice(0, 10);
