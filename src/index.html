@@ -2280,6 +2280,8 @@
             // Set user initials
             const initials = await getUserInitials();
             document.getElementById('user-initials').textContent = initials;
+            // Load profile data for CSV export
+            await loadProfileData();
             // Initialize session input
             initSessionInput();
         }
@@ -3460,13 +3462,14 @@
                 return;
             }
             
-            // Get profile data
+            // Get profile data from global variable (loaded at login) or DOM fallback
+            const profile = window.profileData || {};
             const profileData = {
-                nachname: document.getElementById('display-lastname')?.textContent || '',
-                vorname: document.getElementById('display-firstname')?.textContent || '',
-                verein: document.getElementById('display-club')?.textContent || '',
-                schuetzennummer: document.getElementById('display-shooter-id')?.textContent || '',
-                bssb: document.getElementById('display-bssb')?.textContent || ''
+                nachname: profile.last_name || document.getElementById('display-lastname')?.textContent?.replace('-', '') || '',
+                vorname: profile.first_name || document.getElementById('display-firstname')?.textContent?.replace('-', '') || '',
+                verein: profile.club_name || document.getElementById('display-club')?.textContent?.replace('-', '') || '',
+                schuetzennummer: profile.schuetzennummer || document.getElementById('display-shooter-id')?.textContent?.replace('-', '') || '',
+                bssb: profile.bssb_number || document.getElementById('display-bssb')?.textContent?.replace('-', '') || ''
             };
             
             // Build header
@@ -3644,6 +3647,9 @@
                 .single();
             
             if (data) {
+                // Store in global variable for CSV export
+                window.profileData = data;
+                
                 document.getElementById('display-firstname').textContent = data.first_name || '-';
                 document.getElementById('display-lastname').textContent = data.last_name || '-';
                 document.getElementById('display-shooter-id').textContent = data.schuetzennummer || '-';
