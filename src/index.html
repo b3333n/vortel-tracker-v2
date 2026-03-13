@@ -1301,7 +1301,7 @@
                         📈 Statistik
                     </div>
                     <div class="menu-item" onclick="showPage('beduerfnis')">
-                        📋 Bedürfnisnachweis
+                        📋 Bedürfnis
                     </div>
                     <div class="menu-divider"></div>
                     <div class="menu-item" onclick="showPage('profile')">
@@ -1337,7 +1337,6 @@
                 <button class="nav-btn active" data-page="input" onclick="showPage('input')">✏️ Eingabe</button>
                 <button class="nav-btn" data-page="history" onclick="showPage('history')">📜 Historie</button>
                 <button class="nav-btn" data-page="stats" onclick="showPage('stats')">📈 Statistik</button>
-                <button class="nav-btn" data-page="beduerfnis" onclick="showPage('beduerfnis')">📋 Bedürfnis</button>
             </div>
 
             <!-- Eingabe Page (Startseite) -->
@@ -4579,53 +4578,64 @@
         async function fetchBeduerfnisData(stichtagStr, waffenart, weaponId, sessionType) {
             // Stichtag parsen
             const stichtag = new Date(stichtagStr);
-            const startDate = new Date(stichtag);
-            startDate.setDate(startDate.getDate() - 730); // 24 Monate zurück
             
-            // Query bauen
-            let query = supabase
+            // Erst: Finde das früheste Datum mit der entsprechenden Waffenart (für alle Sessions bis Stichtag)
+            let earliestQuery = supabase
                 .from('sessions')
                 .select(`
                     id, date, session_type, weapon_id,
                     weapons!sessions_weapon_id_fkey(waffenart)
                 `)
                 .eq('user_id', currentUser.id)
-                .gte('date', startDate.toISOString().split('T')[0])
-                .lte('date', stichtagStr);
-            
-            // Waffenart-Filter
-            if (waffenart) {
-                // Wir müssen nach der Waffenart filtern, aber die ist in der weapons Tabelle
-                // Daher holen wir erst alle Sessions und filtern dann client-seitig
-            }
+                .lte('date', stichtagStr)
+                .order('date', { ascending: true });
             
             // Session-Type Filter
             if (sessionType) {
-                query = query.eq('session_type', sessionType);
+                earliestQuery = earliestQuery.eq('session_type', sessionType);
             }
             
-            const { data: sessions, error } = await query.order('date', { ascending: true });
+            const { data: allSessions, error: earliestError } = await earliestQuery;
             
-            if (error) {
-                console.error('Error fetching sessions:', error);
-                throw error;
+            if (earliestError) {
+                console.error('Error fetching earliest sessions:', earliestError);
+                throw earliestError;
             }
             
-            // Client-seitige Filterung nach Waffenart und Waffe
-            let filteredSessions = sessions || [];
+            // Filtere nach Waffenart und Waffe
+            let filteredAllSessions = allSessions || [];
             
-            // Nach Waffenart filtern
             if (waffenart) {
-                filteredSessions = filteredSessions.filter(s => {
+                filteredAllSessions = filteredAllSessions.filter(s => {
                     const weaponWaffenart = s.weapons?.waffenart;
                     return weaponWaffenart === waffenart;
                 });
             }
             
-            // Nach spezifischer Waffe filtern
             if (weaponId) {
-                filteredSessions = filteredSessions.filter(s => s.weapon_id === weaponId);
+                filteredAllSessions = filteredAllSessions.filter(s => s.weapon_id === weaponId);
             }
+            
+            // Finde das früheste Datum
+            let startDate;
+            if (filteredAllSessions.length > 0) {
+                const earliestDate = new Date(filteredAllSessions[0].date);
+                // Berechne 24 Monate zurück vom Stichtag
+                const maxStartDate = new Date(stichtag);
+                maxStartDate.setDate(maxStartDate.getDate() - 730);
+                // Nutze das spätere der beiden Daten (frühestes Eintragsdatum vs 24 Monate vor Stichtag)
+                startDate = earliestDate > maxStartDate ? earliestDate : maxStartDate;
+            } else {
+                // Keine Sessions gefunden - nutze 24 Monate vor Stichtag
+                startDate = new Date(stichtag);
+                startDate.setDate(startDate.getDate() - 730);
+            }
+            
+            // Nun filtere die Sessions auf den relevanten Zeitraum
+            let filteredSessions = filteredAllSessions.filter(s => {
+                const sessionDate = new Date(s.date);
+                return sessionDate >= startDate && sessionDate <= stichtag;
+            });
             
             // Kriterium 1: Quartalsnachweis (1x pro Quartal)
             const quartale = {};
@@ -4665,7 +4675,11 @@
                 return date >= block2Start && date <= block2End;
             }).length;
             
-            const kriterium1Erfuellt = Object.keys(quartale).length >= 8 && 
+            // Berechne wie viele Quartale wir tatsächlich prüfen müssen
+            const monthsDiff = (stichtag.getFullYear() - startDate.getFullYear()) * 12 + 
+                              (stichtag.getMonth() - startDate.getMonth());
+            const quartersToCheck = Math.max(1, Math.ceil(monthsDiff / 3));
+            const kriterium1Erfuellt = Object.keys(quartale).length >= quartersToCheck && 
                 Object.values(quartale).every(q => q.count >= 1);
             
             return {
@@ -4688,36 +4702,47 @@
             const sortedQuartale = Object.entries(data.kriterium1_quartale)
                 .sort(([a], [b]) => a.localeCompare(b));
             
-            // Quartale Grid - letzte 8 Quartale anzeigen
+            // Quartale Grid - nur relevante Quartale vom tatsächlichen Startdatum bis Stichtag
             let quartaleHTML = '';
-            const targetQuarters = 8;
             
-            // Wenn weniger als 8 Quartale vorhanden, fülle mit leeren
-            const displayQuartale = [];
-            
-            // Generiere die letzten 8 Quartale vom Stichtag rückwärts
+            // Generiere Quartale vom Startdatum bis Stichtag
             const stichtag = new Date(data.stichtag);
-            for (let i = 0; i < targetQuarters; i++) {
-                const d = new Date(stichtag);
-                // Gehe i Quartale zurück
-                const monthsBack = i * 3;
-                d.setMonth(d.getMonth() - monthsBack);
-                const year = d.getFullYear();
-                const quarter = Math.floor(d.getMonth() / 3) + 1;
+            const startDate = new Date(data.zeitraum_start);
+            
+            // Berechne alle Quartale im Zeitraum
+            const quarters = [];
+            let currentDate = new Date(stichtag);
+            
+            while (currentDate >= startDate) {
+                const year = currentDate.getFullYear();
+                const quarter = Math.floor(currentDate.getMonth() / 3) + 1;
                 const key = `${year}-Q${quarter}`;
                 
+                if (!quarters.includes(key)) {
+                    quarters.push(key);
+                }
+                
+                // Gehe ein Quartal zurück
+                currentDate.setMonth(currentDate.getMonth() - 3);
+            }
+            
+            // Sortiere chronologisch (ältestes zuerst)
+            quarters.sort();
+            
+            // Generiere HTML für jedes Quartal
+            quarters.forEach(key => {
                 const qData = data.kriterium1_quartale[key] || { count: 0, sessions: [] };
                 const isOk = qData.count >= 1;
                 
                 quartaleHTML += `
-                    <div class="quartal-item ${isOk ? 'ok' : 'nok'}">
-                        <div class="quartal-name">${key}</div>
-                        <div class="quartal-count" style="color: ${isOk ? '#4CAF50' : '#f44336'}">
+                    <div class="quartal-item ${isOk ? 'ok' : 'nok'}" style="padding: 10px; border-radius: 8px; background: #1a1a2e; border: 2px solid ${isOk ? '#4CAF50' : '#f44336'}; text-align: center;">
+                        <div class="quartal-name" style="font-size: 0.8rem; color: #888; margin-bottom: 5px;">${key}</div>
+                        <div class="quartal-count" style="font-size: 1.1rem; font-weight: 600; color: ${isOk ? '#4CAF50' : '#f44336'};">
                             ${qData.count}×
                         </div>
                     </div>
                 `;
-            }
+            });
             
             // Kriterium 1 Status
             const kriterium1Status = data.kriterium1_erfüllt 
