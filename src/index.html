@@ -688,9 +688,20 @@
             margin-bottom: 20px;
         }
         
+        .stats-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
         @media (max-width: 500px) {
             .stats-grid {
                 grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+            .stats-grid-2 {
+                grid-template-columns: repeat(2, 1fr);
                 gap: 8px;
             }
             .chart-card {
@@ -1545,32 +1556,45 @@
                         </div>
                     </div>
                     
-                    <!-- Line Charts -->
+                    <!-- Wertungsrelevant Chart - Full Width -->
                     <div class="chart-card" style="margin-bottom: 20px;">
-                        <div class="chart-title green-title">🟢 Grün + ⚔️ Duell Verlauf</div>
+                        <div class="chart-title" id="chart-scoring-title" style="color: #FFC107;">🏆 Grün + Duell (Wertungsrelevant)</div>
                         <div class="chart-container">
-                            <canvas id="chart-green-duell"></canvas>
+                            <canvas id="chart-scoring"></canvas>
                         </div>
                     </div>
                     
-                    <div class="chart-card" style="margin-bottom: 20px;">
-                        <div class="chart-title red-title">🔴 Rot Verlauf</div>
-                        <div class="chart-container">
-                            <canvas id="chart-red"></canvas>
+                    <!-- Rot + Grün nebeneinander -->
+                    <div class="stats-grid-2">
+                        <div class="chart-card" style="margin-bottom: 20px;">
+                            <div class="chart-title red-title">🔴 Rote Scheibe</div>
+                            <div class="chart-container">
+                                <canvas id="chart-red"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card" style="margin-bottom: 20px;">
+                            <div class="chart-title green-title">🟢 Grüne Scheibe</div>
+                            <div class="chart-container">
+                                <canvas id="chart-green"></canvas>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="chart-card" style="margin-bottom: 20px;">
-                        <div class="chart-title black-title">⚫ Schwarz Verlauf</div>
-                        <div class="chart-container">
-                            <canvas id="chart-black"></canvas>
+                    <!-- Schwarz + Duell nebeneinander -->
+                    <div class="stats-grid-2" id="chart-black-duell-grid">
+                        <div class="chart-card" style="margin-bottom: 20px;">
+                            <div class="chart-title black-title">⚫ Schwarze Scheibe</div>
+                            <div class="chart-container">
+                                <canvas id="chart-black"></canvas>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="chart-card" id="chart-duell-card">
-                        <div class="chart-title duell-title">⚔️ Duell Verlauf</div>
-                        <div class="chart-container">
-                            <canvas id="chart-duell"></canvas>
+                        
+                        <div class="chart-card" id="chart-duell-card" style="margin-bottom: 20px;">
+                            <div class="chart-title duell-title">⚔️ Duell</div>
+                            <div class="chart-container">
+                                <canvas id="chart-duell"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2128,16 +2152,15 @@
         }
         
         function processStatsData(sessions) {
-            const data = {
-                dates: [],
-                red: [],
-                green: [],
-                black: [],
-                duell: [],
-                greenDuell: []
-            };
+            // Aggregate by date (average if multiple sessions per day)
+            const dayMap = {};
             
             sessions.forEach(session => {
+                const date = session.date;
+                if (!dayMap[date]) {
+                    dayMap[date] = { red: [], green: [], black: [], duell: [] };
+                }
+                
                 let redTotal = 0, greenTotal = 0, blackTotal = 0, duellTotal = 0;
                 
                 if (session.results) {
@@ -2153,12 +2176,45 @@
                     duellTotal = session.duell_totals[0].total;
                 }
                 
-                data.dates.push(session.date);
-                data.red.push(redTotal);
-                data.green.push(greenTotal);
-                data.black.push(blackTotal);
-                data.duell.push(duellTotal);
-                data.greenDuell.push(greenTotal + duellTotal);
+                dayMap[date].red.push(redTotal);
+                dayMap[date].green.push(greenTotal);
+                dayMap[date].black.push(blackTotal);
+                dayMap[date].duell.push(duellTotal);
+            });
+            
+            // Calculate daily averages
+            const data = {
+                dates: [],
+                red: [],
+                green: [],
+                black: [],
+                duell: [],
+                scoring: []
+            };
+            
+            const config = DISCIPLINE_CONFIG[statsDiscipline];
+            
+            Object.keys(dayMap).sort().forEach(date => {
+                const day = dayMap[date];
+                const avg = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+                
+                const redAvg = avg(day.red);
+                const greenAvg = avg(day.green);
+                const blackAvg = avg(day.black);
+                const duellAvg = avg(day.duell);
+                
+                data.dates.push(date);
+                data.red.push(Math.round(redAvg * 10) / 10);
+                data.green.push(Math.round(greenAvg * 10) / 10);
+                data.black.push(Math.round(blackAvg * 10) / 10);
+                data.duell.push(Math.round(duellAvg * 10) / 10);
+                
+                // Scoring: Grün+Duell (KK/GK) or Grün+Rot (VL)
+                if (config.hasDuell) {
+                    data.scoring.push(Math.round((greenAvg + duellAvg) * 10) / 10);
+                } else {
+                    data.scoring.push(Math.round((greenAvg + redAvg) * 10) / 10);
+                }
             });
             
             return data;
@@ -2325,19 +2381,27 @@
                 }
             };
             
-            // Grün + Duell Chart
-            const greenDuellDatasets = [
-                { label: 'Grün', data: data.green, borderColor: '#4CAF50', tension: 0.3 }
-            ];
+            // Update scoring title based on discipline
+            const scoringTitle = document.getElementById('chart-scoring-title');
             if (config.hasDuell) {
-                greenDuellDatasets.push({ label: 'Duell', data: data.duell, borderColor: '#2196F3', tension: 0.3 });
+                scoringTitle.textContent = '🏆 Grün + Duell (Wertungsrelevant)';
+            } else {
+                scoringTitle.textContent = '🏆 Grün + Rot (Wertungsrelevant)';
             }
             
-            statsCharts.greenDuell = new Chart(document.getElementById('chart-green-duell'), {
+            // Wertungsrelevant Chart (Full Width)
+            statsCharts.scoring = new Chart(document.getElementById('chart-scoring'), {
                 type: 'line',
                 data: {
                     labels: data.dates,
-                    datasets: greenDuellDatasets
+                    datasets: [{ 
+                        label: 'Wertung', 
+                        data: data.scoring, 
+                        borderColor: '#FFC107', 
+                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
                 },
                 options: commonOptions
             });
@@ -2348,6 +2412,16 @@
                 data: {
                     labels: data.dates,
                     datasets: [{ label: 'Rot', data: data.red, borderColor: '#f44336', tension: 0.3 }]
+                },
+                options: commonOptions
+            });
+            
+            // Grün Chart
+            statsCharts.green = new Chart(document.getElementById('chart-green'), {
+                type: 'line',
+                data: {
+                    labels: data.dates,
+                    datasets: [{ label: 'Grün', data: data.green, borderColor: '#4CAF50', tension: 0.3 }]
                 },
                 options: commonOptions
             });
@@ -2364,8 +2438,11 @@
             
             // Duell Chart (only if applicable)
             const duellCard = document.getElementById('chart-duell-card');
+            const blackDuellGrid = document.getElementById('chart-black-duell-grid');
+            
             if (config.hasDuell) {
                 duellCard.style.display = 'block';
+                blackDuellGrid.style.display = 'grid';
                 statsCharts.duell = new Chart(document.getElementById('chart-duell'), {
                     type: 'line',
                     data: {
@@ -2376,6 +2453,8 @@
                 });
             } else {
                 duellCard.style.display = 'none';
+                // For VL, show only black chart centered or full width
+                blackDuellGrid.style.gridTemplateColumns = '1fr';
             }
         }
         
