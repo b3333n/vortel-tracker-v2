@@ -575,6 +575,11 @@
             min-width: 120px;
         }
         
+        /* Inline Edit Form */
+        .inline-edit-form {
+            animation: slideDown 0.3s ease;
+        }
+        
         /* Success Notification */
         .save-notification {
             position: fixed;
@@ -1731,13 +1736,14 @@
                 weapons.forEach(weapon => {
                     const item = document.createElement('div');
                     item.className = 'equipment-item';
+                    item.id = `weapon-item-${weapon.id}`;
                     item.innerHTML = `
                         <div class="equipment-info">
                             <div class="equipment-name">${weapon.manufacturer} ${weapon.model}${weapon.is_loan ? ' (LEIH)' : ''}</div>
                             <div class="equipment-details">${weapon.caliber}${weapon.waffenart ? ' • ' + weapon.waffenart : ''}</div>
                         </div>
                         <div class="equipment-actions">
-                            <button class="btn-small" onclick="editWeapon(${weapon.id})" style="background: #4CAF50; color: white;">✏️ Bearbeiten</button>
+                            <button class="btn-small" onclick="toggleWeaponEdit(${weapon.id})" style="background: #4CAF50; color: white;">✏️ Bearbeiten</button>
                             <button class="btn-small" onclick="archiveWeapon(${weapon.id})" style="background: #FF9800; color: white;">🗄️ Archiv</button>
                         </div>
                     `;
@@ -1779,13 +1785,14 @@
                 ammo.forEach(a => {
                     const item = document.createElement('div');
                     item.className = 'equipment-item';
+                    item.id = `ammo-item-${a.id}`;
                     item.innerHTML = `
                         <div class="equipment-info">
                             <div class="equipment-name">${a.manufacturer} ${a.caliber}</div>
                             <div class="equipment-details">${a.weight_grains ? a.weight_grains + ' grains' : 'Kein Gewicht'}</div>
                         </div>
                         <div class="equipment-actions">
-                            <button class="btn-small" onclick="editAmmo(${a.id})" style="background: #4CAF50; color: white;">✏️ Bearbeiten</button>
+                            <button class="btn-small" onclick="toggleAmmoEdit(${a.id})" style="background: #4CAF50; color: white;">✏️ Bearbeiten</button>
                             <button class="btn-small" onclick="archiveAmmo(${a.id})" style="background: #FF9800; color: white;">🗄️ Archiv</button>
                         </div>
                     `;
@@ -1853,8 +1860,14 @@
             }
         }
         
-        // Edit weapon - fill form
-        async function editWeapon(id) {
+        // Toggle inline weapon edit form
+        async function toggleWeaponEdit(id) {
+            const existingForm = document.getElementById(`weapon-edit-${id}`);
+            if (existingForm) {
+                existingForm.remove();
+                return;
+            }
+            
             try {
                 const { data: weapon, error } = await supabase
                     .from('weapons')
@@ -1864,27 +1877,83 @@
                 
                 if (error) throw error;
                 
-                document.getElementById('weapon-id').value = weapon.id;
-                document.getElementById('weapon-manufacturer').value = weapon.manufacturer;
-                document.getElementById('weapon-model').value = weapon.model;
-                document.getElementById('weapon-caliber').value = weapon.caliber;
-                document.getElementById('weapon-type').value = weapon.waffenart || '';
-                document.getElementById('weapon-is-loan').checked = weapon.is_loan;
+                const editForm = document.createElement('div');
+                editForm.id = `weapon-edit-${id}`;
+                editForm.className = 'inline-edit-form';
+                editForm.innerHTML = `
+                    <div class="card" style="margin-top: 10px; background: #1a1a2e;">
+                        <div class="card-title" style="font-size: 1rem;">✏️ Waffe bearbeiten</div>
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 2;">
+                                <label class="form-label">Hersteller</label>
+                                <input type="text" id="edit-weapon-manufacturer-${id}" class="form-input" value="${weapon.manufacturer}">
+                            </div>
+                            <div class="form-group" style="flex: 2;">
+                                <label class="form-label">Modell</label>
+                                <input type="text" id="edit-weapon-model-${id}" class="form-input" value="${weapon.model}">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">Kaliber</label>
+                                <input type="text" id="edit-weapon-caliber-${id}" class="form-input" value="${weapon.caliber}">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">Waffenart</label>
+                                <select id="edit-weapon-type-${id}" class="form-input">
+                                    <option value="">--</option>
+                                    <option value="Kurzwaffe" ${weapon.waffenart === 'Kurzwaffe' ? 'selected' : ''}>Kurzwaffe</option>
+                                    <option value="Langwaffe" ${weapon.waffenart === 'Langwaffe' ? 'selected' : ''}>Langwaffe</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="edit-weapon-is-loan-${id}" ${weapon.is_loan ? 'checked' : ''}>
+                                <span>Leihwaffe</span>
+                            </label>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="saveWeaponInline(${id})">💾 Speichern</button>
+                            <button class="btn btn-secondary" onclick="toggleWeaponEdit(${id})">Abbrechen</button>
+                        </div>
+                    </div>
+                `;
                 
-                document.getElementById('weapon-submit-btn').textContent = '💾 Aktualisieren';
-                document.getElementById('weapon-cancel-btn').style.display = 'inline-block';
+                const item = document.getElementById(`weapon-item-${id}`);
+                item.after(editForm);
                 
             } catch (error) {
                 alert('Fehler: ' + error.message);
             }
         }
         
-        // Cancel weapon edit
-        function cancelWeaponEdit() {
-            document.getElementById('weapon-form').reset();
-            document.getElementById('weapon-id').value = '';
-            document.getElementById('weapon-submit-btn').textContent = '💾 Hinzufügen';
-            document.getElementById('weapon-cancel-btn').style.display = 'none';
+        // Save inline weapon edit
+        async function saveWeaponInline(id) {
+            const manufacturer = document.getElementById(`edit-weapon-manufacturer-${id}`).value;
+            const model = document.getElementById(`edit-weapon-model-${id}`).value;
+            const caliber = document.getElementById(`edit-weapon-caliber-${id}`).value;
+            const waffenart = document.getElementById(`edit-weapon-type-${id}`).value;
+            const isLoan = document.getElementById(`edit-weapon-is-loan-${id}`).checked;
+            
+            try {
+                const { error } = await supabase
+                    .from('weapons')
+                    .update({
+                        manufacturer: manufacturer,
+                        model: model,
+                        caliber: caliber,
+                        waffenart: waffenart || null,
+                        is_loan: isLoan
+                    })
+                    .eq('id', id);
+                
+                if (error) throw error;
+                loadWeapons();
+                
+            } catch (error) {
+                alert('Fehler: ' + error.message);
+            }
         }
         
         // Save ammo (add or update)
@@ -1933,8 +2002,14 @@
             }
         }
         
-        // Edit ammo - fill form
-        async function editAmmo(id) {
+        // Toggle inline ammo edit form
+        async function toggleAmmoEdit(id) {
+            const existingForm = document.getElementById(`ammo-edit-${id}`);
+            if (existingForm) {
+                existingForm.remove();
+                return;
+            }
+            
             try {
                 const { data: ammo, error } = await supabase
                     .from('ammunition')
@@ -1944,25 +2019,63 @@
                 
                 if (error) throw error;
                 
-                document.getElementById('ammo-id').value = ammo.id;
-                document.getElementById('ammo-manufacturer').value = ammo.manufacturer;
-                document.getElementById('ammo-caliber').value = ammo.caliber;
-                document.getElementById('ammo-weight').value = ammo.weight_grains || '';
+                const editForm = document.createElement('div');
+                editForm.id = `ammo-edit-${id}`;
+                editForm.className = 'inline-edit-form';
+                editForm.innerHTML = `
+                    <div class="card" style="margin-top: 10px; background: #1a1a2e;">
+                        <div class="card-title" style="font-size: 1rem;">✏️ Munition bearbeiten</div>
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 2;">
+                                <label class="form-label">Hersteller</label>
+                                <input type="text" id="edit-ammo-manufacturer-${id}" class="form-input" value="${ammo.manufacturer}">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">Kaliber</label>
+                                <input type="text" id="edit-ammo-caliber-${id}" class="form-input" value="${ammo.caliber}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Gewicht (grains)</label>
+                            <input type="number" id="edit-ammo-weight-${id}" class="form-input" value="${ammo.weight_grains || ''}">
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="saveAmmoInline(${id})">💾 Speichern</button>
+                            <button class="btn btn-secondary" onclick="toggleAmmoEdit(${id})">Abbrechen</button>
+                        </div>
+                    </div>
+                `;
                 
-                document.getElementById('ammo-submit-btn').textContent = '💾 Aktualisieren';
-                document.getElementById('ammo-cancel-btn').style.display = 'inline-block';
+                const item = document.getElementById(`ammo-item-${id}`);
+                item.after(editForm);
                 
             } catch (error) {
                 alert('Fehler: ' + error.message);
             }
         }
         
-        // Cancel ammo edit
-        function cancelAmmoEdit() {
-            document.getElementById('ammo-form').reset();
-            document.getElementById('ammo-id').value = '';
-            document.getElementById('ammo-submit-btn').textContent = '💾 Hinzufügen';
-            document.getElementById('ammo-cancel-btn').style.display = 'none';
+        // Save inline ammo edit
+        async function saveAmmoInline(id) {
+            const manufacturer = document.getElementById(`edit-ammo-manufacturer-${id}`).value;
+            const caliber = document.getElementById(`edit-ammo-caliber-${id}`).value;
+            const weight = document.getElementById(`edit-ammo-weight-${id}`).value;
+            
+            try {
+                const { error } = await supabase
+                    .from('ammunition')
+                    .update({
+                        manufacturer: manufacturer,
+                        caliber: caliber,
+                        weight_grains: weight ? parseInt(weight) : null
+                    })
+                    .eq('id', id);
+                
+                if (error) throw error;
+                loadAmmo();
+                
+            } catch (error) {
+                alert('Fehler: ' + error.message);
+            }
         }
         
         // Archive weapon
