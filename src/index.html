@@ -435,6 +435,39 @@
             box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
         }
         
+        .save-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Success Notification */
+        .save-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            padding: 15px 30px;
+            border-radius: 8px;
+            background: rgba(76, 175, 80, 0.95);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+        
         @media (max-width: 600px) {
             .form-row {
                 flex-direction: column;
@@ -1599,13 +1632,167 @@
             btn.textContent = '💾 Speichern...';
             btn.disabled = true;
             
-            // TODO: Implement Supabase save
-            
-            setTimeout(() => {
-                alert('Session gespeichert! (Demo)');
+            try {
+                const config = DISCIPLINE_CONFIG[currentDiscipline];
+                
+                // Collect session data
+                const sessionData = {
+                    user_id: currentUser.id,
+                    date: document.getElementById('session-date').value,
+                    discipline: currentDiscipline,
+                    session_type: currentSessionType,
+                    weapon_id: document.getElementById('session-weapon').value || null,
+                    ammunition_id: document.getElementById('session-ammunition').value || null,
+                    location: document.getElementById('session-location').value || null,
+                    notes: currentSessionType === 'TR' 
+                        ? document.getElementById('training-notes').value 
+                        : document.getElementById('session-notes').value
+                };
+                
+                // Insert session
+                const { data: session, error: sessionError } = await supabase
+                    .from('sessions')
+                    .insert(sessionData)
+                    .select()
+                    .single();
+                
+                if (sessionError) throw sessionError;
+                
+                // If training, we're done
+                if (currentSessionType === 'TR') {
+                    showSaveSuccess();
+                    resetForm();
+                    return;
+                }
+                
+                // Collect results for Vortel sessions
+                const results = [];
+                
+                // Red shots
+                for (let i = 1; i <= 5; i++) {
+                    const val = parseInt(document.getElementById(`red-${i}`).value);
+                    if (!isNaN(val)) {
+                        results.push({
+                            session_id: session.id,
+                            target_type: 'red',
+                            shot_number: i,
+                            value: val
+                        });
+                    }
+                }
+                
+                // Green shots
+                for (let i = 1; i <= config.green; i++) {
+                    const val = parseInt(document.getElementById(`green-${i}`).value);
+                    if (!isNaN(val)) {
+                        results.push({
+                            session_id: session.id,
+                            target_type: 'green',
+                            shot_number: i,
+                            value: val
+                        });
+                    }
+                }
+                
+                // Black shots
+                for (let i = 1; i <= 10; i++) {
+                    const val = parseInt(document.getElementById(`black-${i}`).value);
+                    if (!isNaN(val)) {
+                        results.push({
+                            session_id: session.id,
+                            target_type: 'black',
+                            shot_number: i,
+                            value: val
+                        });
+                    }
+                }
+                
+                // Duell shots
+                if (config.hasDuell) {
+                    if (duellMode === 'total') {
+                        const total = parseInt(document.getElementById('duell-total-input').value);
+                        if (!isNaN(total)) {
+                            // Save as duell_total
+                            await supabase
+                                .from('duell_totals')
+                                .insert({
+                                    session_id: session.id,
+                                    total: total
+                                });
+                        }
+                    } else {
+                        for (let i = 1; i <= config.duell; i++) {
+                            const val = parseInt(document.getElementById(`duell-${i}`).value);
+                            if (!isNaN(val)) {
+                                results.push({
+                                    session_id: session.id,
+                                    target_type: 'duell',
+                                    shot_number: i,
+                                    value: val
+                                });
+                            }
+                        }
+                    }
+                }
+                
+                // Insert all results
+                if (results.length > 0) {
+                    const { error: resultsError } = await supabase
+                        .from('results')
+                        .insert(results);
+                    
+                    if (resultsError) throw resultsError;
+                }
+                
+                showSaveSuccess();
+                resetForm();
+                
+            } catch (error) {
+                console.error('Save error:', error);
+                alert('Fehler beim Speichern: ' + error.message);
+            } finally {
                 btn.textContent = currentSessionType === 'TR' ? '💾 Training speichern' : '💾 Speichern';
                 btn.disabled = false;
-            }, 1000);
+            }
+        }
+        
+        // Show save success message
+        function showSaveSuccess() {
+            // Create success notification
+            const notification = document.createElement('div');
+            notification.className = 'save-notification';
+            notification.textContent = currentSessionType === 'TR' ? '✅ Training gespeichert!' : '✅ Session gespeichert!';
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideDown 0.3s ease reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 2700);
+        }
+        
+        // Reset form after save
+        function resetForm() {
+            // Reset date to today
+            document.getElementById('session-date').valueAsDate = new Date();
+            
+            // Reset inputs
+            document.querySelectorAll('.shot-input').forEach(input => {
+                input.value = '';
+                input.style.borderColor = '#3d3d54';
+            });
+            
+            // Reset duell total
+            document.getElementById('duell-total-input').value = '';
+            
+            // Reset notes
+            document.getElementById('session-notes').value = '';
+            document.getElementById('training-notes').value = '';
+            
+            // Reset summary
+            calculateSummary();
+            
+            // Focus first red input
+            document.getElementById('red-1')?.focus();
         }
     </script>
 </body>
