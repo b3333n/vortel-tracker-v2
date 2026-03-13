@@ -468,6 +468,149 @@
             }
         }
         
+        /* History Page Styles */
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .filter-label {
+            display: block;
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+        
+        .filter-select {
+            width: 100%;
+            padding: 10px;
+            background: #1a1a2e;
+            border: 2px solid #3d3d54;
+            border-radius: 8px;
+            color: #eee;
+            font-size: 0.95rem;
+        }
+        
+        .scroll-hint {
+            text-align: center;
+            color: #666;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .scroll-hint {
+                display: block;
+            }
+        }
+        
+        .table-scroll-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -20px;
+            padding: 0 20px;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #2d2d44;
+            border-radius: 12px;
+            overflow: hidden;
+            min-width: 700px;
+        }
+        
+        .history-table th {
+            background: #3d3d54;
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #aaa;
+            white-space: nowrap;
+        }
+        
+        .history-table th.red-header { color: #f44336; }
+        .history-table th.green-header { color: #4CAF50; }
+        .history-table th.black-header { color: #888; }
+        .history-table th.duell-header { color: #2196F3; }
+        .history-table th.combined-header { color: #9C27B0; }
+        .history-table th.total-header { color: #FFC107; }
+        
+        .history-table td {
+            padding: 12px 8px;
+            text-align: center;
+            border-bottom: 1px solid #3d3d54;
+            font-size: 0.95rem;
+            white-space: nowrap;
+        }
+        
+        .history-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .history-table tr:hover {
+            background: #353550;
+        }
+        
+        .date-cell {
+            font-weight: 600;
+            color: #FFC107;
+        }
+        
+        .discipline-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .discipline-badge.kk { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
+        .discipline-badge.gk { background: rgba(244, 67, 54, 0.2); color: #f44336; }
+        .discipline-badge.vl { background: rgba(33, 33, 33, 0.5); color: #aaa; border: 1px solid #666; }
+        
+        .type-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .type-badge.vo { background: rgba(244, 67, 54, 0.2); color: #f44336; }
+        .type-badge.tr { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
+        
+        .score-red { color: #f44336; font-weight: 600; }
+        .score-green { color: #4CAF50; font-weight: 600; }
+        .score-black { color: #888; font-weight: 600; }
+        .score-duell { color: #2196F3; font-weight: 600; }
+        .score-combined { color: #9C27B0; font-weight: 700; }
+        .score-total { color: #FFC107; font-weight: 700; font-size: 1.1rem; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        
         @media (max-width: 600px) {
             .form-row {
                 flex-direction: column;
@@ -935,7 +1078,63 @@
             <div id="page-history" class="page" style="display: none;">
                 <div class="card">
                     <div class="card-title">📜 Historie</div>
-                    <p>Coming soon...</p>
+                    
+                    <!-- Filters -->
+                    <div class="filters">
+                        <div class="filter-group">
+                            <label class="filter-label">Disziplin</label>
+                            <select id="filter-discipline" class="filter-select" onchange="loadHistory()">
+                                <option value="">Alle</option>
+                                <option value="KK">🔫 KK</option>
+                                <option value="GK">🎯 GK</option>
+                                <option value="VL">⚫ VL</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Typ</label>
+                            <select id="filter-type" class="filter-select" onchange="loadHistory()">
+                                <option value="">Alle</option>
+                                <option value="VO">Vortel</option>
+                                <option value="TR">Training</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Scroll hint for mobile -->
+                    <div class="scroll-hint">← Wischen für mehr Spalten →</div>
+                    
+                    <!-- History Table -->
+                    <div class="table-scroll-container">
+                        <table class="history-table" id="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Datum</th>
+                                    <th>Disziplin</th>
+                                    <th>Typ</th>
+                                    <th class="red-header">Rot</th>
+                                    <th class="green-header">Grün</th>
+                                    <th class="black-header">Schwarz</th>
+                                    <th class="duell-header">Duell</th>
+                                    <th class="combined-header">Grün+Duell</th>
+                                    <th class="total-header">Gesamt</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-tbody">
+                                <!-- Dynamically populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Empty State -->
+                    <div id="history-empty" class="empty-state" style="display: none;">
+                        <div class="empty-state-icon">📭</div>
+                        <p>Noch keine Sessions vorhanden</p>
+                    </div>
+                    
+                    <!-- Loading State -->
+                    <div id="history-loading" class="loading" style="display: none;">
+                        Lade Historie...
+                    </div>
                 </div>
             </div>
 
@@ -1230,6 +1429,11 @@
             if (page === 'profile') {
                 loadProfileData();
             }
+            
+            // Load history if history page
+            if (page === 'history') {
+                loadHistory();
+            }
         }
         
         // Load and display profile data
@@ -1352,6 +1556,125 @@
         
         // Initialize
         checkAuth();
+        
+        // ========== HISTORY LOGIC ==========
+        
+        // Load and display history
+        async function loadHistory() {
+            const tbody = document.getElementById('history-tbody');
+            const emptyState = document.getElementById('history-empty');
+            const loading = document.getElementById('history-loading');
+            
+            if (!tbody) return; // Not on history page
+            
+            // Show loading
+            tbody.innerHTML = '';
+            loading.style.display = 'block';
+            emptyState.style.display = 'none';
+            
+            try {
+                // Build query
+                let query = supabase
+                    .from('sessions')
+                    .select(`
+                        id,
+                        date,
+                        discipline,
+                        session_type,
+                        results (
+                            target_type,
+                            value
+                        ),
+                        duell_totals (
+                            total
+                        )
+                    `)
+                    .eq('user_id', currentUser.id)
+                    .order('date', { ascending: false });
+                
+                // Apply filters
+                const disciplineFilter = document.getElementById('filter-discipline')?.value;
+                const typeFilter = document.getElementById('filter-type')?.value;
+                
+                if (disciplineFilter) {
+                    query = query.eq('discipline', disciplineFilter);
+                }
+                if (typeFilter) {
+                    query = query.eq('session_type', typeFilter);
+                }
+                
+                const { data: sessions, error } = await query;
+                
+                if (error) throw error;
+                
+                loading.style.display = 'none';
+                
+                if (!sessions || sessions.length === 0) {
+                    emptyState.style.display = 'block';
+                    return;
+                }
+                
+                // Render sessions
+                sessions.forEach(session => {
+                    const row = document.createElement('tr');
+                    
+                    // Calculate scores
+                    let redTotal = 0, greenTotal = 0, blackTotal = 0, duellTotal = 0;
+                    
+                    if (session.results) {
+                        session.results.forEach(r => {
+                            if (r.target_type === 'red') redTotal += r.value;
+                            else if (r.target_type === 'green') greenTotal += r.value;
+                            else if (r.target_type === 'black') blackTotal += r.value;
+                            else if (r.target_type === 'duell') duellTotal += r.value;
+                        });
+                    }
+                    
+                    // Check for duell_total
+                    if (session.duell_totals && session.duell_totals.length > 0) {
+                        duellTotal = session.duell_totals[0].total;
+                    }
+                    
+                    const combined = greenTotal + duellTotal;
+                    const grandTotal = redTotal + greenTotal + blackTotal + duellTotal;
+                    
+                    // Format date
+                    const date = new Date(session.date);
+                    const dateStr = date.toLocaleDateString('de-DE', { 
+                        day: '2-digit', 
+                        month: '2-digit', 
+                        year: 'numeric' 
+                    });
+                    
+                    // Determine if VL (no duell)
+                    const isVL = session.discipline === 'VL';
+                    
+                    row.innerHTML = `
+                        <td class="date-cell">${dateStr}</td>
+                        <td><span class="discipline-badge ${session.discipline.toLowerCase()}">${session.discipline}</span></td>
+                        <td><span class="type-badge ${session.session_type.toLowerCase()}">${session.session_type === 'VO' ? 'Vortel' : 'Training'}</span></td>
+                        <td class="score-red">${session.session_type === 'TR' ? '-' : redTotal}</td>
+                        <td class="score-green">${session.session_type === 'TR' ? '-' : greenTotal}</td>
+                        <td class="score-black">${session.session_type === 'TR' ? '-' : blackTotal}</td>
+                        <td class="score-duell">${session.session_type === 'TR' || isVL ? '-' : duellTotal}</td>
+                        <td class="score-combined">${session.session_type === 'TR' || isVL ? '-' : combined}</td>
+                        <td class="score-total">${session.session_type === 'TR' ? '-' : grandTotal}</td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+                
+            } catch (error) {
+                console.error('Error loading history:', error);
+                loading.style.display = 'none';
+                emptyState.style.display = 'block';
+                emptyState.innerHTML = `
+                    <div class="empty-state-icon">⚠️</div>
+                    <p>Fehler beim Laden der Historie</p>
+                    <p style="font-size: 0.85rem; margin-top: 10px;">${error.message}</p>
+                `;
+            }
+        }
         
         // ========== SESSION INPUT LOGIC ==========
         
