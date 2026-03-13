@@ -110,6 +110,27 @@
             margin: 4px 0;
         }
         
+        /* Profile Display */
+        .profile-field {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #3d3d54;
+        }
+        
+        .profile-field:last-child {
+            border-bottom: none;
+        }
+        
+        .profile-label {
+            color: #888;
+        }
+        
+        .profile-value {
+            color: #eee;
+            font-weight: 500;
+        }
+        
         /* Auth Section */
         .auth-section {
             background: #2d2d44;
@@ -432,9 +453,54 @@
             <!-- Profil Page (via Menu) -->
             <div id="page-profile" class="page" style="display: none;">
                 <div class="card">
-                    <div class="card-title">👤 Profil</div>
-                    <p>Deine Schützen-Daten.</p>
-                    <p style="margin-top: 10px; color: #888;">Coming soon...</p>
+                    <div class="card-title">👤 Mein Profil</div>
+                    <div id="profile-display">
+                        <div class="profile-field">
+                            <span class="profile-label">Vorname:</span>
+                            <span id="display-firstname" class="profile-value">-</span>
+                        </div>
+                        <div class="profile-field">
+                            <span class="profile-label">Nachname:</span>
+                            <span id="display-lastname" class="profile-value">-</span>
+                        </div>
+                        <div class="profile-field">
+                            <span class="profile-label">Schützennummer:</span>
+                            <span id="display-shooter-id" class="profile-value">-</span>
+                        </div>
+                        <div class="profile-field">
+                            <span class="profile-label">Verein:</span>
+                            <span id="display-club" class="profile-value">-</span>
+                        </div>
+                        <div class="profile-field">
+                            <span class="profile-label">E-Mail:</span>
+                            <span id="display-email" class="profile-value">-</span>
+                        </div>
+                        <button class="btn btn-primary" style="margin-top: 20px;" onclick="showProfileEdit()">
+                            ✏️ Bearbeiten
+                        </button>
+                    </div>
+                    <div id="profile-edit-form" style="display: none;">
+                        <form id="edit-profile-form">
+                            <div class="form-group">
+                                <label class="form-label">Vorname</label>
+                                <input type="text" id="edit-firstname" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Nachname</label>
+                                <input type="text" id="edit-lastname" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Schützennummer</label>
+                                <input type="text" id="edit-shooter-id" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Verein</label>
+                                <input type="text" id="edit-club" class="form-input">
+                            </div>
+                            <button type="submit" class="btn btn-primary">💾 Speichern</button>
+                            <button type="button" class="btn btn-secondary" onclick="cancelProfileEdit()">Abbrechen</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -642,7 +708,82 @@
             
             // Close menu
             menuDropdown.classList.remove('active');
+            
+            // Load profile data if profile page
+            if (page === 'profile') {
+                loadProfileData();
+            }
         }
+        
+        // Load and display profile data
+        async function loadProfileData() {
+            if (!currentUser) return;
+            
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+            
+            if (data) {
+                document.getElementById('display-firstname').textContent = data.first_name || '-';
+                document.getElementById('display-lastname').textContent = data.last_name || '-';
+                document.getElementById('display-shooter-id').textContent = data.schuetzennummer || '-';
+                document.getElementById('display-club').textContent = data.club_name || '-';
+                document.getElementById('display-email').textContent = currentUser.email || '-';
+                
+                // Update initials in menu
+                if (data.first_name && data.last_name) {
+                    const initials = (data.first_name[0] + data.last_name[0]).toUpperCase();
+                    document.getElementById('user-initials').textContent = initials;
+                }
+            }
+        }
+        
+        // Show profile edit form
+        function showProfileEdit() {
+            document.getElementById('profile-display').style.display = 'none';
+            document.getElementById('profile-edit-form').style.display = 'block';
+            
+            // Pre-fill form
+            document.getElementById('edit-firstname').value = document.getElementById('display-firstname').textContent !== '-' ? document.getElementById('display-firstname').textContent : '';
+            document.getElementById('edit-lastname').value = document.getElementById('display-lastname').textContent !== '-' ? document.getElementById('display-lastname').textContent : '';
+            document.getElementById('edit-shooter-id').value = document.getElementById('display-shooter-id').textContent !== '-' ? document.getElementById('display-shooter-id').textContent : '';
+            document.getElementById('edit-club').value = document.getElementById('display-club').textContent !== '-' ? document.getElementById('display-club').textContent : '';
+        }
+        
+        // Cancel profile edit
+        function cancelProfileEdit() {
+            document.getElementById('profile-display').style.display = 'block';
+            document.getElementById('profile-edit-form').style.display = 'none';
+        }
+        
+        // Edit profile form handler
+        document.getElementById('edit-profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const firstname = document.getElementById('edit-firstname').value;
+            const lastname = document.getElementById('edit-lastname').value;
+            const shooterId = document.getElementById('edit-shooter-id').value;
+            const club = document.getElementById('edit-club').value;
+            
+            const { error } = await supabase
+                .from('profiles')
+                .update({
+                    first_name: firstname,
+                    last_name: lastname,
+                    schuetzennummer: shooterId || null,
+                    club_name: club || null
+                })
+                .eq('id', currentUser.id);
+            
+            if (error) {
+                alert('Fehler: ' + error.message);
+            } else {
+                cancelProfileEdit();
+                loadProfileData();
+            }
+        });
         
         // Login form handler
         loginForm.addEventListener('submit', async (e) => {
