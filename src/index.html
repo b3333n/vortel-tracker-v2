@@ -648,7 +648,7 @@
         .year-value {
             font-size: 2.5rem;
             font-weight: 700;
-            color: #4CAF50;
+            color: #eee;
             margin-bottom: 5px;
         }
         
@@ -659,9 +659,10 @@
         }
         
         .year-type {
-            font-size: 0.8rem;
-            color: #aaa;
+            font-size: 0.75rem;
+            color: #888;
             font-weight: 500;
+            margin-top: 4px;
         }
         
         /* Mobile: Keep year boxes side by side */
@@ -1510,15 +1511,15 @@
                     <!-- Gauge Charts -->
                     <div class="stats-grid">
                         <div class="chart-card">
-                            <div class="chart-title green-title">🟢 Grün Ø</div>
+                            <div class="chart-title green-title">Ø Grün</div>
                             <div class="gauge-wrapper" id="gauge-green"></div>
                         </div>
                         <div class="chart-card">
-                            <div class="chart-title black-title">⚫ Schwarz Ø</div>
+                            <div class="chart-title black-title">Ø Schwarz</div>
                             <div class="gauge-wrapper" id="gauge-black"></div>
                         </div>
                         <div class="chart-card" id="gauge-duell-card">
-                            <div class="chart-title duell-title">⚔️ Duell Ø</div>
+                            <div class="chart-title duell-title">Ø Duell</div>
                             <div class="gauge-wrapper" id="gauge-duell"></div>
                         </div>
                     </div>
@@ -2202,24 +2203,43 @@
             document.getElementById('prev-year-label').textContent = prevYear;
             
             const config = DISCIPLINE_CONFIG[statsDiscipline];
-            const yearTypeLabel = config.hasDuell ? '🟢 Grün + ⚔️ Duell' : '🟢 Grün + 🔴 Rot';
+            const yearTypeLabel = config.hasDuell ? 'Grün + Duell' : 'Grün + Rot';
             
             document.getElementById('current-year-type').textContent = yearTypeLabel;
             document.getElementById('prev-year-type').textContent = yearTypeLabel;
             
+            const currentYearValue = document.getElementById('current-year-avg');
+            const prevYearValue = document.getElementById('prev-year-avg');
+            
             if (currentStats) {
-                document.getElementById('current-year-avg').textContent = currentStats.avg;
+                currentYearValue.textContent = currentStats.avg;
                 document.getElementById('current-year-detail').textContent = `${currentStats.count} Wertungen`;
+                
+                // Color logic: green if better than previous year, red if worse
+                if (prevStats) {
+                    if (currentStats.avg > prevStats.avg) {
+                        currentYearValue.style.color = '#4CAF50'; // Better = green
+                    } else if (currentStats.avg < prevStats.avg) {
+                        currentYearValue.style.color = '#f44336'; // Worse = red
+                    } else {
+                        currentYearValue.style.color = '#FFC107'; // Same = yellow
+                    }
+                } else {
+                    currentYearValue.style.color = '#4CAF50'; // No comparison = default green
+                }
             } else {
-                document.getElementById('current-year-avg').textContent = '-';
+                currentYearValue.textContent = '-';
+                currentYearValue.style.color = '#4CAF50';
                 document.getElementById('current-year-detail').textContent = 'Keine Daten';
             }
             
             if (prevStats) {
-                document.getElementById('prev-year-avg').textContent = prevStats.avg;
+                prevYearValue.textContent = prevStats.avg;
+                prevYearValue.style.color = '#888'; // Previous year always gray
                 document.getElementById('prev-year-detail').textContent = `${prevStats.count} Wertungen`;
             } else {
-                document.getElementById('prev-year-avg').textContent = '-';
+                prevYearValue.textContent = '-';
+                prevYearValue.style.color = '#888';
                 document.getElementById('prev-year-detail').textContent = 'Keine Daten';
             }
         }
