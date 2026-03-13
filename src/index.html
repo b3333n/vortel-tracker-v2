@@ -1301,6 +1301,7 @@
                 <div class="nav" style="margin-bottom: 20px;">
                     <button class="nav-btn active" onclick="showWeaponsTab('weapons')">🔫 Waffen</button>
                     <button class="nav-btn" onclick="showWeaponsTab('ammo')">💣 Munition</button>
+                    <button class="nav-btn" onclick="showWeaponsTab('archive')">🗄️ Archiv</button>
                 </div>
                 
                 <!-- Waffen Tab -->
@@ -1386,6 +1387,23 @@
                                 <button type="button" class="btn btn-secondary" id="ammo-cancel-btn" onclick="cancelAmmoEdit()" style="display: none;">Abbrechen</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+                
+                <!-- Archiv Tab -->
+                <div id="archive-tab" class="weapons-tab" style="display: none;">
+                    <div class="card">
+                        <div class="card-title">🗄️ Archiv - Waffen</div>
+                        <div id="archived-weapons-list" class="equipment-list">
+                            <div class="loading">Lade archivierte Waffen...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-title">🗄️ Archiv - Munition</div>
+                        <div id="archived-ammo-list" class="equipment-list">
+                            <div class="loading">Lade archivierte Munition...</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1670,7 +1688,7 @@
         
         // ========== WEAPONS & AMMO LOGIC ==========
         
-        // Show weapons or ammo tab
+        // Show weapons, ammo or archive tab
         function showWeaponsTab(tab) {
             document.querySelectorAll('#page-weapons .nav-btn').forEach(btn => {
                 btn.classList.remove('active');
@@ -1679,6 +1697,12 @@
             
             document.getElementById('weapons-tab').style.display = tab === 'weapons' ? 'block' : 'none';
             document.getElementById('ammo-tab').style.display = tab === 'ammo' ? 'block' : 'none';
+            document.getElementById('archive-tab').style.display = tab === 'archive' ? 'block' : 'none';
+            
+            if (tab === 'archive') {
+                loadArchivedWeapons();
+                loadArchivedAmmo();
+            }
         }
         
         // Load weapons from Supabase
@@ -1970,6 +1994,132 @@
                     .eq('id', id);
                 
                 if (error) throw error;
+                loadAmmo();
+                
+            } catch (error) {
+                alert('Fehler: ' + error.message);
+            }
+        }
+        
+        // Load archived weapons
+        async function loadArchivedWeapons() {
+            const list = document.getElementById('archived-weapons-list');
+            if (!list) return;
+            
+            list.innerHTML = '<div class="loading">Lade archivierte Waffen...</div>';
+            
+            try {
+                const { data: weapons, error } = await supabase
+                    .from('weapons')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .eq('archived', true)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                if (!weapons || weapons.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🗄️</div><p>Keine archivierten Waffen</p></div>';
+                    return;
+                }
+                
+                list.innerHTML = '';
+                weapons.forEach(weapon => {
+                    const item = document.createElement('div');
+                    item.className = 'equipment-item';
+                    item.innerHTML = `
+                        <div class="equipment-info">
+                            <div class="equipment-name">${weapon.manufacturer} ${weapon.model}${weapon.is_loan ? ' (LEIH)' : ''}</div>
+                            <div class="equipment-details">${weapon.caliber}${weapon.waffenart ? ' • ' + weapon.waffenart : ''}</div>
+                        </div>
+                        <div class="equipment-actions">
+                            <button class="btn-small" onclick="restoreWeapon(${weapon.id})" style="background: #4CAF50; color: white;">↩️ Wiederherstellen</button>
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+                
+            } catch (error) {
+                console.error('Error loading archived weapons:', error);
+                list.innerHTML = '<div class="empty-state"><p>Fehler beim Laden</p></div>';
+            }
+        }
+        
+        // Load archived ammo
+        async function loadArchivedAmmo() {
+            const list = document.getElementById('archived-ammo-list');
+            if (!list) return;
+            
+            list.innerHTML = '<div class="loading">Lade archivierte Munition...</div>';
+            
+            try {
+                const { data: ammo, error } = await supabase
+                    .from('ammunition')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .eq('archived', true)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                if (!ammo || ammo.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🗄️</div><p>Keine archivierte Munition</p></div>';
+                    return;
+                }
+                
+                list.innerHTML = '';
+                ammo.forEach(a => {
+                    const item = document.createElement('div');
+                    item.className = 'equipment-item';
+                    item.innerHTML = `
+                        <div class="equipment-info">
+                            <div class="equipment-name">${a.manufacturer} ${a.caliber}</div>
+                            <div class="equipment-details">${a.weight_grains ? a.weight_grains + ' grains' : 'Kein Gewicht'}</div>
+                        </div>
+                        <div class="equipment-actions">
+                            <button class="btn-small" onclick="restoreAmmo(${a.id})" style="background: #4CAF50; color: white;">↩️ Wiederherstellen</button>
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+                
+            } catch (error) {
+                console.error('Error loading archived ammo:', error);
+                list.innerHTML = '<div class="empty-state"><p>Fehler beim Laden</p></div>';
+            }
+        }
+        
+        // Restore weapon
+        async function restoreWeapon(id) {
+            if (!confirm('Waffe wiederherstellen?')) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('weapons')
+                    .update({ archived: false })
+                    .eq('id', id);
+                
+                if (error) throw error;
+                loadArchivedWeapons();
+                loadWeapons();
+                
+            } catch (error) {
+                alert('Fehler: ' + error.message);
+            }
+        }
+        
+        // Restore ammo
+        async function restoreAmmo(id) {
+            if (!confirm('Munition wiederherstellen?')) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('ammunition')
+                    .update({ archived: false })
+                    .eq('id', id);
+                
+                if (error) throw error;
+                loadArchivedAmmo();
                 loadAmmo();
                 
             } catch (error) {
