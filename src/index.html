@@ -476,6 +476,73 @@
             transform: none;
         }
         
+        /* Equipment List Styles */
+        .equipment-list {
+            margin-top: 15px;
+        }
+        
+        .equipment-item {
+            background: #1a1a2e;
+            border: 2px solid #3d3d54;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .equipment-item:hover {
+            border-color: #4CAF50;
+        }
+        
+        .equipment-info {
+            flex: 1;
+        }
+        
+        .equipment-name {
+            font-weight: 600;
+            color: #eee;
+            margin-bottom: 4px;
+        }
+        
+        .equipment-details {
+            font-size: 0.85rem;
+            color: #888;
+        }
+        
+        .equipment-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-archive {
+            background: #f44336;
+            color: white;
+        }
+        
+        .btn-archive:hover {
+            background: #d32f2f;
+        }
+        
+        .weapons-tab {
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
         /* Success Notification */
         .save-notification {
             position: fixed;
@@ -1198,10 +1265,82 @@
 
             <!-- Waffen & Munition Page (via Menu) -->
             <div id="page-weapons" class="page" style="display: none;">
-                <div class="card">
-                    <div class="card-title">🔫 Waffen & Munition</div>
-                    <p>Verwaltung deiner Ausrüstung.</p>
-                    <p style="margin-top: 10px; color: #888;">Coming soon...</p>
+                <!-- Tabs -->
+                <div class="nav" style="margin-bottom: 20px;">
+                    <button class="nav-btn active" onclick="showWeaponsTab('weapons')">🔫 Waffen</button>
+                    <button class="nav-btn" onclick="showWeaponsTab('ammo')">💣 Munition</button>
+                </div>
+                
+                <!-- Waffen Tab -->
+                <div id="weapons-tab" class="weapons-tab">
+                    <div class="card">
+                        <div class="card-title">🔫 Meine Waffen</div>
+                        <div id="weapons-list" class="equipment-list">
+                            <div class="loading">Lade Waffen...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-title">➕ Neue Waffe</div>
+                        <form id="weapon-form" onsubmit="addWeapon(event)">
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 2;">
+                                    <label class="form-label">Hersteller *</label>
+                                    <input type="text" id="weapon-manufacturer" class="form-input" placeholder="z.B. Walther" required>
+                                </div>
+                                <div class="form-group" style="flex: 2;">
+                                    <label class="form-label">Modell *</label>
+                                    <input type="text" id="weapon-model" class="form-input" placeholder="z.B. GSP" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 1;">
+                                    <label class="form-label">Kaliber *</label>
+                                    <input type="text" id="weapon-caliber" class="form-input" placeholder="z.B. .22lr" required>
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label class="form-label">Waffenart</label>
+                                    <select id="weapon-type" class="form-input">
+                                        <option value="">-- Wählen --</option>
+                                        <option value="Kurzwaffe">Kurzwaffe</option>
+                                        <option value="Langwaffe">Langwaffe</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">💾 Hinzufügen</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Munition Tab -->
+                <div id="ammo-tab" class="weapons-tab" style="display: none;">
+                    <div class="card">
+                        <div class="card-title">💣 Meine Munition</div>
+                        <div id="ammo-list" class="equipment-list">
+                            <div class="loading">Lade Munition...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-title">➕ Neue Munition</div>
+                        <form id="ammo-form" onsubmit="addAmmo(event)">
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 2;">
+                                    <label class="form-label">Hersteller *</label>
+                                    <input type="text" id="ammo-manufacturer" class="form-input" placeholder="z.B. RWS" required>
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label class="form-label">Kaliber *</label>
+                                    <input type="text" id="ammo-caliber" class="form-input" placeholder="z.B. .22lr" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Gewicht (grains)</label>
+                                <input type="number" id="ammo-weight" class="form-input" placeholder="z.B. 40">
+                            </div>
+                            <button type="submit" class="btn btn-primary">💾 Hinzufügen</button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
@@ -1475,6 +1614,245 @@
             if (page === 'history') {
                 loadHistory();
             }
+            
+            // Load weapons if weapons page
+            if (page === 'weapons') {
+                loadWeapons();
+                loadAmmo();
+            }
+        }
+        
+        // ========== WEAPONS & AMMO LOGIC ==========
+        
+        // Show weapons or ammo tab
+        function showWeaponsTab(tab) {
+            document.querySelectorAll('#page-weapons .nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.getElementById('weapons-tab').style.display = tab === 'weapons' ? 'block' : 'none';
+            document.getElementById('ammo-tab').style.display = tab === 'ammo' ? 'block' : 'none';
+        }
+        
+        // Load weapons from Supabase
+        async function loadWeapons() {
+            const list = document.getElementById('weapons-list');
+            if (!list) return;
+            
+            list.innerHTML = '<div class="loading">Lade Waffen...</div>';
+            
+            try {
+                const { data: weapons, error } = await supabase
+                    .from('weapons')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .eq('archived', false)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                if (!weapons || weapons.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔫</div><p>Noch keine Waffen vorhanden</p></div>';
+                    return;
+                }
+                
+                list.innerHTML = '';
+                weapons.forEach(weapon => {
+                    const item = document.createElement('div');
+                    item.className = 'equipment-item';
+                    item.innerHTML = `
+                        <div class="equipment-info">
+                            <div class="equipment-name">${weapon.manufacturer} ${weapon.model}</div>
+                            <div class="equipment-details">${weapon.caliber}${weapon.waffenart ? ' • ' + weapon.waffenart : ''}</div>
+                        </div>
+                        <div class="equipment-actions">
+                            <button class="btn-small btn-archive" onclick="archiveWeapon(${weapon.id})">🗑️</button>
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+                
+                // Update dropdown in session form
+                updateWeaponDropdown(weapons);
+                
+            } catch (error) {
+                console.error('Error loading weapons:', error);
+                list.innerHTML = '<div class="empty-state"><p>Fehler beim Laden</p></div>';
+            }
+        }
+        
+        // Load ammo from Supabase
+        async function loadAmmo() {
+            const list = document.getElementById('ammo-list');
+            if (!list) return;
+            
+            list.innerHTML = '<div class="loading">Lade Munition...</div>';
+            
+            try {
+                const { data: ammo, error } = await supabase
+                    .from('ammunition')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .eq('archived', false)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                if (!ammo || ammo.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">💣</div><p>Noch keine Munition vorhanden</p></div>';
+                    return;
+                }
+                
+                list.innerHTML = '';
+                ammo.forEach(a => {
+                    const item = document.createElement('div');
+                    item.className = 'equipment-item';
+                    item.innerHTML = `
+                        <div class="equipment-info">
+                            <div class="equipment-name">${a.manufacturer} ${a.caliber}</div>
+                            <div class="equipment-details">${a.weight_grains ? a.weight_grains + ' grains' : 'Kein Gewicht'}</div>
+                        </div>
+                        <div class="equipment-actions">
+                            <button class="btn-small btn-archive" onclick="archiveAmmo(${a.id})">🗑️</button>
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+                
+                // Update dropdown in session form
+                updateAmmoDropdown(ammo);
+                
+            } catch (error) {
+                console.error('Error loading ammo:', error);
+                list.innerHTML = '<div class="empty-state"><p>Fehler beim Laden</p></div>';
+            }
+        }
+        
+        // Add new weapon
+        async function addWeapon(event) {
+            event.preventDefault();
+            
+            const manufacturer = document.getElementById('weapon-manufacturer').value;
+            const model = document.getElementById('weapon-model').value;
+            const caliber = document.getElementById('weapon-caliber').value;
+            const waffenart = document.getElementById('weapon-type').value;
+            
+            try {
+                const { error } = await supabase
+                    .from('weapons')
+                    .insert({
+                        user_id: currentUser.id,
+                        manufacturer: manufacturer,
+                        model: model,
+                        caliber: caliber,
+                        waffenart: waffenart || null,
+                        archived: false
+                    });
+                
+                if (error) throw error;
+                
+                // Reset form and reload
+                document.getElementById('weapon-form').reset();
+                loadWeapons();
+                
+            } catch (error) {
+                alert('Fehler: ' + error.message);
+            }
+        }
+        
+        // Add new ammo
+        async function addAmmo(event) {
+            event.preventDefault();
+            
+            const manufacturer = document.getElementById('ammo-manufacturer').value;
+            const caliber = document.getElementById('ammo-caliber').value;
+            const weight = document.getElementById('ammo-weight').value;
+            
+            try {
+                const { error } = await supabase
+                    .from('ammunition')
+                    .insert({
+                        user_id: currentUser.id,
+                        manufacturer: manufacturer,
+                        caliber: caliber,
+                        weight_grains: weight ? parseInt(weight) : null,
+                        archived: false
+                    });
+                
+                if (error) throw error;
+                
+                // Reset form and reload
+                document.getElementById('ammo-form').reset();
+                loadAmmo();
+                
+            } catch (error) {
+                alert('Fehler: ' + error.message);
+            }
+        }
+        
+        // Archive weapon
+        async function archiveWeapon(id) {
+            if (!confirm('Waffe archivieren?')) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('weapons')
+                    .update({ archived: true })
+                    .eq('id', id);
+                
+                if (error) throw error;
+                loadWeapons();
+                
+            } catch (error) {
+                alert('Fehler: ' + error.message);
+            }
+        }
+        
+        // Archive ammo
+        async function archiveAmmo(id) {
+            if (!confirm('Munition archivieren?')) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('ammunition')
+                    .update({ archived: true })
+                    .eq('id', id);
+                
+                if (error) throw error;
+                loadAmmo();
+                
+            } catch (error) {
+                alert('Fehler: ' + error.message);
+            }
+        }
+        
+        // Update weapon dropdown in session form
+        function updateWeaponDropdown(weapons) {
+            const select = document.getElementById('session-weapon');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">🔫 Waffe auswählen (optional)</option>';
+            weapons.forEach(w => {
+                const option = document.createElement('option');
+                option.value = w.id;
+                option.textContent = `${w.manufacturer} ${w.model}`;
+                select.appendChild(option);
+            });
+        }
+        
+        // Update ammo dropdown in session form
+        function updateAmmoDropdown(ammo) {
+            const select = document.getElementById('session-ammunition');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">💣 Munition auswählen (optional)</option>';
+            ammo.forEach(a => {
+                const option = document.createElement('option');
+                option.value = a.id;
+                option.textContent = `${a.manufacturer} ${a.caliber}${a.weight_grains ? ' (' + a.weight_grains + 'grs)' : ''}`;
+                select.appendChild(option);
+            });
         }
         
         // Load and display profile data
