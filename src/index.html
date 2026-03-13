@@ -580,6 +580,28 @@
             animation: slideDown 0.3s ease;
         }
         
+        /* Modal */
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #3d3d54;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .modal-close:hover {
+            color: #fff;
+        }
+        
         /* Stats Page Styles */
         .summary-cards {
             display: grid;
@@ -1543,6 +1565,11 @@
                         <button class="btn btn-primary" onclick="loadHistory()" style="flex: 1;">🔍 Filtern</button>
                         <button class="btn btn-secondary" onclick="resetHistoryFilters()" style="flex: 1;">↩️ Zurücksetzen</button>
                     </div>
+                    
+                    <!-- CSV Export -->
+                    <div style="margin-top: 15px;">
+                        <button class="btn btn-secondary" onclick="exportHistoryToCSV()" style="width: 100%; background: #2196F3;">📥 Als CSV exportieren</button>
+                    </div>
                 </div>
                     
                     <!-- Scroll hint for mobile -->
@@ -1564,6 +1591,7 @@
                                     <th class="black-header">⚫ Schwarz</th>
                                     <th class="combined-header">🟢+⚔️</th>
                                     <th class="total-header">🏆 Gesamt</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody id="history-tbody">
@@ -1853,6 +1881,37 @@
                 </div>
             </div>
 
+            <!-- Edit Modal -->
+            <div id="edit-modal" class="modal-overlay" style="display: none;">
+                <div class="modal" style="max-width: 400px;">
+                    <div class="modal-header">
+                        <div class="modal-title">✏️ Session bearbeiten</div>
+                        <button class="modal-close" onclick="closeEditModal()">&times;</button>
+                    </div>
+                    <input type="hidden" id="edit-session-id">
+                    <div class="form-group">
+                        <label class="form-label">📅 Datum</label>
+                        <input type="date" id="edit-date" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🔫 Waffe</label>
+                        <select id="edit-weapon" class="form-input">
+                            <option value="">Keine Waffe</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">💣 Munition</label>
+                        <select id="edit-ammo" class="form-input">
+                            <option value="">Keine Munition</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="saveSessionEdit()" style="flex: 1;">💾 Speichern</button>
+                        <button class="btn btn-secondary" onclick="closeEditModal()" style="flex: 1;">Abbrechen</button>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Profil Page (via Menu) -->
             <div id="page-profile" class="page" style="display: none;">
                 <div class="card">
@@ -3167,6 +3226,128 @@
             });
         }
         
+        // ========== CSV EXPORT ==========
+        function exportHistoryToCSV() {
+            const sessions = window.historySessions;
+            if (!sessions || sessions.length === 0) {
+                alert('Keine Daten zum Exportieren');
+                return;
+            }
+            
+            // CSV Header
+            let csv = 'Datum;Disziplin;Typ;Waffe;Rot;Grün;Duell;Schwarz;Gesamt\n';
+            
+            sessions.forEach(session => {
+                let redTotal = 0, greenTotal = 0, blackTotal = 0, duellTotal = 0;
+                
+                if (session.results) {
+                    session.results.forEach(r => {
+                        if (r.target_type === 'red') redTotal += r.value;
+                        else if (r.target_type === 'green') greenTotal += r.value;
+                        else if (r.target_type === 'black') blackTotal += r.value;
+                        else if (r.target_type === 'duell') duellTotal += r.value;
+                    });
+                }
+                
+                if (session.duell_totals && session.duell_totals.length > 0) {
+                    duellTotal = session.duell_totals[0].total;
+                }
+                
+                const weaponInfo = session.weapons ? `${session.weapons.manufacturer} ${session.weapons.model}` : '';
+                
+                csv += `${session.date};${session.discipline};${session.session_type};${weaponInfo};${redTotal};${greenTotal};${duellTotal};${blackTotal};${redTotal + greenTotal + blackTotal + duellTotal}\n`;
+            });
+            
+            // Download
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `vortel-tracker-export-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+        
+        // ========== EDIT MODAL ==========
+        async function openEditModal(sessionId) {
+            const modal = document.getElementById('edit-modal');
+            document.getElementById('edit-session-id').value = sessionId;
+            
+            // Load session data
+            const { data: session, error } = await supabase
+                .from('sessions')
+                .select('*')
+                .eq('id', sessionId)
+                .single();
+            
+            if (error) {
+                alert('Fehler beim Laden');
+                return;
+            }
+            
+            // Fill form
+            document.getElementById('edit-date').value = session.date;
+            
+            // Load weapons & ammo for dropdowns
+            const { data: weapons } = await supabase
+                .from('weapons')
+                .select('id, manufacturer, model')
+                .eq('user_id', currentUser.id)
+                .eq('archived', false);
+            
+            const weaponSelect = document.getElementById('edit-weapon');
+            weaponSelect.innerHTML = '<option value="">Keine Waffe</option>';
+            if (weapons) {
+                weapons.forEach(w => {
+                    weaponSelect.innerHTML += `<option value="${w.id}" ${w.id == session.weapon_id ? 'selected' : ''}>${w.manufacturer} ${w.model}</option>`;
+                });
+            }
+            
+            const { data: ammo } = await supabase
+                .from('ammunition')
+                .select('id, manufacturer, caliber')
+                .eq('user_id', currentUser.id)
+                .eq('archived', false);
+            
+            const ammoSelect = document.getElementById('edit-ammo');
+            ammoSelect.innerHTML = '<option value="">Keine Munition</option>';
+            if (ammo) {
+                ammo.forEach(a => {
+                    ammoSelect.innerHTML += `<option value="${a.id}" ${a.id == session.ammunition_id ? 'selected' : ''}>${a.manufacturer} ${a.caliber}</option>`;
+                });
+            }
+            
+            modal.style.display = 'flex';
+        }
+        
+        function closeEditModal() {
+            document.getElementById('edit-modal').style.display = 'none';
+        }
+        
+        async function saveSessionEdit() {
+            const sessionId = document.getElementById('edit-session-id').value;
+            const date = document.getElementById('edit-date').value;
+            const weaponId = document.getElementById('edit-weapon').value || null;
+            const ammoId = document.getElementById('edit-ammo').value || null;
+            
+            try {
+                const { error } = await supabase
+                    .from('sessions')
+                    .update({
+                        date: date,
+                        weapon_id: weaponId,
+                        ammunition_id: ammoId
+                    })
+                    .eq('id', sessionId);
+                
+                if (error) throw error;
+                
+                closeEditModal();
+                loadHistory();
+                
+            } catch (error) {
+                alert('Fehler beim Speichern: ' + error.message);
+            }
+        }
+        
         // Load and display profile data
         async function loadProfileData() {
             if (!currentUser) return;
@@ -3401,8 +3582,11 @@
                     return;
                 }
                 
+                // Store sessions for CSV export
+                window.historySessions = sessions;
+                
                 // Render sessions
-                sessions.forEach(session => {
+                sessions.forEach((session, index) => {
                     const row = document.createElement('tr');
                     
                     // Calculate scores
@@ -3454,6 +3638,9 @@
                         <td class="score-black">${session.session_type === 'TR' ? '-' : blackTotal}</td>
                         <td class="score-combined">${session.session_type === 'TR' || isVL ? '-' : combined}</td>
                         <td class="score-total">${session.session_type === 'TR' ? '-' : grandTotal}</td>
+                        <td>
+                            <button class="btn-small" onclick="openEditModal(${session.id})" style="background: #4CAF50; color: white;">✏️</button>
+                        </td>
                     `;
                     
                     tbody.appendChild(row);
