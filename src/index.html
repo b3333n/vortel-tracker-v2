@@ -27,7 +27,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             padding: 10px 0;
         }
         
@@ -43,6 +43,71 @@
         .logo-icon {
             width: 40px;
             height: 40px;
+        }
+        
+        /* User Menu */
+        .user-menu {
+            position: relative;
+        }
+        
+        .menu-btn {
+            background: #2d2d44;
+            border: 2px solid #3d3d54;
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #eee;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .menu-btn:hover {
+            border-color: #4CAF50;
+        }
+        
+        .menu-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: #2d2d44;
+            border: 2px solid #3d3d54;
+            border-radius: 8px;
+            min-width: 200px;
+            display: none;
+            z-index: 100;
+        }
+        
+        .menu-dropdown.active {
+            display: block;
+        }
+        
+        .menu-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+        }
+        
+        .menu-item:hover {
+            background: #3d3d54;
+        }
+        
+        .menu-item:first-child {
+            border-radius: 6px 6px 0 0;
+        }
+        
+        .menu-item:last-child {
+            border-radius: 0 0 6px 6px;
+        }
+        
+        .menu-divider {
+            height: 1px;
+            background: #3d3d54;
+            margin: 4px 0;
         }
         
         /* Auth Section */
@@ -268,8 +333,32 @@
                 </svg>
                 Vortel Tracker V2
             </div>
-            <div id="user-section">
-                <!-- Will be populated by JS -->
+            <div class="user-menu" id="user-menu" style="display: none;">
+                <button class="menu-btn" onclick="toggleMenu()">
+                    <span id="user-initials">👤</span>
+                    <span>☰</span>
+                </button>
+                <div class="menu-dropdown" id="menu-dropdown">
+                    <div class="menu-item" onclick="showPage('dashboard')">
+                        📊 Dashboard
+                    </div>
+                    <div class="menu-item" onclick="showPage('history')">
+                        📜 Historie
+                    </div>
+                    <div class="menu-item" onclick="showPage('weapons')">
+                        🔫 Waffen & Munition
+                    </div>
+                    <div class="menu-item" onclick="showPage('stats')">
+                        📈 Statistik
+                    </div>
+                    <div class="menu-divider"></div>
+                    <div class="menu-item" onclick="showPage('profile')">
+                        👤 Profil
+                    </div>
+                    <div class="menu-item" onclick="logout()">
+                        🚪 Logout
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -291,32 +380,22 @@
 
         <!-- Main Content (shown when logged in) -->
         <div id="main-content" class="main-content">
-            <!-- Navigation -->
+            <!-- Navigation Tabs -->
             <div class="nav">
-                <button class="nav-btn active" data-page="dashboard">📊 Dashboard</button>
-                <button class="nav-btn" data-page="input">✏️ Eingabe</button>
-                <button class="nav-btn" data-page="history">📜 Historie</button>
-                <button class="nav-btn" data-page="weapons">🔫 Waffen</button>
-                <button class="nav-btn" data-page="stats">📈 Statistik</button>
+                <button class="nav-btn active" data-page="input" onclick="showPage('input')">✏️ Eingabe</button>
+                <button class="nav-btn" data-page="history" onclick="showPage('history')">📜 Historie</button>
+                <button class="nav-btn" data-page="stats" onclick="showPage('stats')">📈 Statistik</button>
             </div>
 
-            <!-- Dashboard Page -->
-            <div id="page-dashboard" class="page active">
-                <div class="card">
-                    <div class="card-title">Willkommen zurück!</div>
-                    <p>Hier entsteht Vortel Tracker V2 mit Supabase.</p>
-                    <p style="margin-top: 10px; color: #888;">Features werden schrittweise hinzugefügt.</p>
-                </div>
-            </div>
-
-            <!-- Other pages will be added iteratively -->
-            <div id="page-input" class="page" style="display: none;">
+            <!-- Eingabe Page (Startseite) -->
+            <div id="page-input" class="page active">
                 <div class="card">
                     <div class="card-title">✏️ Neue Session</div>
                     <p>Coming soon...</p>
                 </div>
             </div>
 
+            <!-- Historie Page -->
             <div id="page-history" class="page" style="display: none;">
                 <div class="card">
                     <div class="card-title">📜 Historie</div>
@@ -324,17 +403,38 @@
                 </div>
             </div>
 
-            <div id="page-weapons" class="page" style="display: none;">
-                <div class="card">
-                    <div class="card-title">🔫 Waffen</div>
-                    <p>Coming soon...</p>
-                </div>
-            </div>
-
+            <!-- Statistik Page -->
             <div id="page-stats" class="page" style="display: none;">
                 <div class="card">
                     <div class="card-title">📈 Statistik</div>
                     <p>Coming soon...</p>
+                </div>
+            </div>
+
+            <!-- Dashboard Page (via Menu) -->
+            <div id="page-dashboard" class="page" style="display: none;">
+                <div class="card">
+                    <div class="card-title">📊 Dashboard</div>
+                    <p>Übersicht deiner Schießleistungen.</p>
+                    <p style="margin-top: 10px; color: #888;">Coming soon...</p>
+                </div>
+            </div>
+
+            <!-- Waffen & Munition Page (via Menu) -->
+            <div id="page-weapons" class="page" style="display: none;">
+                <div class="card">
+                    <div class="card-title">🔫 Waffen & Munition</div>
+                    <p>Verwaltung deiner Ausrüstung.</p>
+                    <p style="margin-top: 10px; color: #888;">Coming soon...</p>
+                </div>
+            </div>
+
+            <!-- Profil Page (via Menu) -->
+            <div id="page-profile" class="page" style="display: none;">
+                <div class="card">
+                    <div class="card-title">👤 Profil</div>
+                    <p>Deine Schützen-Daten.</p>
+                    <p style="margin-top: 10px; color: #888;">Coming soon...</p>
                 </div>
             </div>
         </div>
@@ -401,7 +501,8 @@
         // DOM Elements
         const authSection = document.getElementById('auth-section');
         const mainContent = document.getElementById('main-content');
-        const userSection = document.getElementById('user-section');
+        const userMenu = document.getElementById('user-menu');
+        const menuDropdown = document.getElementById('menu-dropdown');
         const authMessage = document.getElementById('auth-message');
         const loginForm = document.getElementById('login-form');
         
@@ -483,19 +584,64 @@
         function showAuthSection() {
             authSection.style.display = 'block';
             mainContent.classList.remove('active');
-            userSection.innerHTML = '';
+            userMenu.style.display = 'none';
         }
         
         // Show main content
         function showMainContent() {
             authSection.style.display = 'none';
             mainContent.classList.add('active');
-            userSection.innerHTML = `
-                <div class="user-info">
-                    <span class="user-email">${currentUser.email}</span>
-                    <button onclick="logout()" class="btn btn-secondary">Logout</button>
-                </div>
-            `;
+            userMenu.style.display = 'block';
+            // Set user initials
+            const initials = getUserInitials();
+            document.getElementById('user-initials').textContent = initials;
+        }
+        
+        // Get user initials from profile or email
+        function getUserInitials() {
+            if (currentUser.email) {
+                return currentUser.email.substring(0, 2).toUpperCase();
+            }
+            return '👤';
+        }
+        
+        // Toggle menu dropdown
+        function toggleMenu() {
+            menuDropdown.classList.toggle('active');
+        }
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!userMenu.contains(e.target)) {
+                menuDropdown.classList.remove('active');
+            }
+        });
+        
+        // Show specific page
+        function showPage(page) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => {
+                p.style.display = 'none';
+                p.classList.remove('active');
+            });
+            
+            // Show selected page
+            const selectedPage = document.getElementById(`page-${page}`);
+            if (selectedPage) {
+                selectedPage.style.display = 'block';
+                selectedPage.classList.add('active');
+            }
+            
+            // Update nav buttons (only for main tabs)
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.page === page) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Close menu
+            menuDropdown.classList.remove('active');
         }
         
         // Login form handler
@@ -533,19 +679,7 @@
             authMessage.innerHTML = `<div class="message ${type}">${text}</div>`;
         }
         
-        // Navigation handler
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Update active button
-                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                
-                // Show corresponding page
-                const page = btn.dataset.page;
-                document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-                document.getElementById(`page-${page}`).style.display = 'block';
-            });
-        });
+
         
         // Listen for auth changes
         supabase.auth.onAuthStateChange((event, session) => {
