@@ -756,6 +756,14 @@
             .chart-container {
                 height: 200px;
             }
+            .beduerfnis-controls {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+            #beduerfnis-stichtag {
+                font-size: 16px;
+                min-height: 40px;
+            }
         }
         
         .chart-card {
@@ -1786,14 +1794,14 @@
                     <p style="color: #888; font-size: 0.9rem; margin-bottom: 15px;">Nachweis für Schusswaffen-Besitz (§12 WaffG)</p>
                     
                     <!-- Controls -->
-                    <div class="form-row" style="margin-bottom: 15px;">
-                        <div class="form-group" style="flex: 1;">
+                    <div class="form-row beduerfnis-controls" style="margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group" style="min-width: 0;">
                             <label class="form-label">📅 Stichtag</label>
-                            <input type="date" id="beduerfnis-stichtag" class="form-input">
+                            <input type="date" id="beduerfnis-stichtag" class="form-input" style="width: 100%; max-width: 100%;">
                         </div>
-                        <div class="form-group" style="flex: 1;">
+                        <div class="form-group" style="min-width: 0;">
                             <label class="form-label">📋 Typ</label>
-                            <select id="beduerfnis-type" class="form-input" onchange="analyzeBeduerfnis()">
+                            <select id="beduerfnis-type" class="form-input" onchange="analyzeBeduerfnis()" style="width: 100%;">
                                 <option value="">Alle Vorgänge</option>
                                 <option value="VO">Vortel</option>
                                 <option value="TR">Training</option>
