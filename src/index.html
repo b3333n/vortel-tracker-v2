@@ -2637,22 +2637,53 @@
                 scoringTitle.textContent = '🏆 Grün + Rot (Wertungsrelevant)';
             }
             
-            // Wertungsrelevant Chart (Full Width)
+            // Wertungsrelevant Chart (Full Width) - 3 Linien wie in V1
+            const scoringDatasets = [
+                { 
+                    label: 'Grün', 
+                    data: data.green, 
+                    borderColor: '#4CAF50', 
+                    backgroundColor: 'transparent',
+                    tension: 0.3,
+                    spanGaps: true
+                },
+                { 
+                    label: 'Gesamt', 
+                    data: data.scoring, 
+                    borderColor: '#FFC107', 
+                    backgroundColor: 'transparent',
+                    tension: 0.3,
+                    borderWidth: 3,
+                    spanGaps: true
+                }
+            ];
+            
+            // Nur bei KK/GK auch Duell-Linie anzeigen
+            if (config.hasDuell) {
+                scoringDatasets.splice(1, 0, { 
+                    label: 'Duell', 
+                    data: data.duell, 
+                    borderColor: '#2196F3', 
+                    backgroundColor: 'transparent',
+                    tension: 0.3,
+                    spanGaps: true
+                });
+            }
+            
             statsCharts.scoring = new Chart(document.getElementById('chart-scoring'), {
                 type: 'line',
                 data: {
                     labels: data.dates,
-                    datasets: [{ 
-                        label: 'Wertung', 
-                        data: data.scoring, 
-                        borderColor: '#FFC107', 
-                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                        tension: 0.3,
-                        fill: true,
-                        spanGaps: true
-                    }]
+                    datasets: scoringDatasets
                 },
-                options: commonOptions
+                options: Object.assign({}, commonOptions, {
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { color: '#eee' }
+                        }
+                    }
+                })
             });
             
             // Rot Chart
