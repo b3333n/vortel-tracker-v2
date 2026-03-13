@@ -543,6 +543,38 @@
             to { opacity: 1; }
         }
         
+        /* Checkbox Styles */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            color: #eee;
+        }
+        
+        .checkbox-label input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .form-actions .btn {
+            flex: 1;
+            min-width: 120px;
+        }
+        
         /* Success Notification */
         .save-notification {
             position: fixed;
@@ -1282,7 +1314,8 @@
                     
                     <div class="card">
                         <div class="card-title">➕ Neue Waffe</div>
-                        <form id="weapon-form" onsubmit="addWeapon(event)">
+                        <form id="weapon-form" onsubmit="saveWeapon(event)">
+                            <input type="hidden" id="weapon-id" value="">
                             <div class="form-row">
                                 <div class="form-group" style="flex: 2;">
                                     <label class="form-label">Hersteller *</label>
@@ -1307,7 +1340,16 @@
                                     </select>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-primary">💾 Hinzufügen</button>
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="weapon-is-loan">
+                                    <span>Leihwaffe</span>
+                                </label>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary" id="weapon-submit-btn">💾 Hinzufügen</button>
+                                <button type="button" class="btn btn-secondary" id="weapon-cancel-btn" onclick="cancelWeaponEdit()" style="display: none;">Abbrechen</button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -1323,7 +1365,8 @@
                     
                     <div class="card">
                         <div class="card-title">➕ Neue Munition</div>
-                        <form id="ammo-form" onsubmit="addAmmo(event)">
+                        <form id="ammo-form" onsubmit="saveAmmo(event)">
+                            <input type="hidden" id="ammo-id" value="">
                             <div class="form-row">
                                 <div class="form-group" style="flex: 2;">
                                     <label class="form-label">Hersteller *</label>
@@ -1338,7 +1381,10 @@
                                 <label class="form-label">Gewicht (grains)</label>
                                 <input type="number" id="ammo-weight" class="form-input" placeholder="z.B. 40">
                             </div>
-                            <button type="submit" class="btn btn-primary">💾 Hinzufügen</button>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary" id="ammo-submit-btn">💾 Hinzufügen</button>
+                                <button type="button" class="btn btn-secondary" id="ammo-cancel-btn" onclick="cancelAmmoEdit()" style="display: none;">Abbrechen</button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -1663,10 +1709,11 @@
                     item.className = 'equipment-item';
                     item.innerHTML = `
                         <div class="equipment-info">
-                            <div class="equipment-name">${weapon.manufacturer} ${weapon.model}</div>
+                            <div class="equipment-name">${weapon.manufacturer} ${weapon.model}${weapon.is_loan ? ' (LEIH)' : ''}</div>
                             <div class="equipment-details">${weapon.caliber}${weapon.waffenart ? ' • ' + weapon.waffenart : ''}</div>
                         </div>
                         <div class="equipment-actions">
+                            <button class="btn-small" onclick="editWeapon(${weapon.id})" style="background: #4CAF50; color: white;">✏️</button>
                             <button class="btn-small btn-archive" onclick="archiveWeapon(${weapon.id})">🗑️</button>
                         </div>
                     `;
@@ -1714,6 +1761,7 @@
                             <div class="equipment-details">${a.weight_grains ? a.weight_grains + ' grains' : 'Kein Gewicht'}</div>
                         </div>
                         <div class="equipment-actions">
+                            <button class="btn-small" onclick="editAmmo(${a.id})" style="background: #4CAF50; color: white;">✏️</button>
                             <button class="btn-small btn-archive" onclick="archiveAmmo(${a.id})">🗑️</button>
                         </div>
                     `;
@@ -1729,31 +1777,51 @@
             }
         }
         
-        // Add new weapon
-        async function addWeapon(event) {
+        // Save weapon (add or update)
+        async function saveWeapon(event) {
             event.preventDefault();
             
+            const id = document.getElementById('weapon-id').value;
             const manufacturer = document.getElementById('weapon-manufacturer').value;
             const model = document.getElementById('weapon-model').value;
             const caliber = document.getElementById('weapon-caliber').value;
             const waffenart = document.getElementById('weapon-type').value;
+            const isLoan = document.getElementById('weapon-is-loan').checked;
             
             try {
-                const { error } = await supabase
-                    .from('weapons')
-                    .insert({
-                        user_id: currentUser.id,
-                        manufacturer: manufacturer,
-                        model: model,
-                        caliber: caliber,
-                        waffenart: waffenart || null,
-                        archived: false
-                    });
-                
-                if (error) throw error;
+                if (id) {
+                    // Update existing
+                    const { error } = await supabase
+                        .from('weapons')
+                        .update({
+                            manufacturer: manufacturer,
+                            model: model,
+                            caliber: caliber,
+                            waffenart: waffenart || null,
+                            is_loan: isLoan
+                        })
+                        .eq('id', id);
+                    
+                    if (error) throw error;
+                } else {
+                    // Insert new
+                    const { error } = await supabase
+                        .from('weapons')
+                        .insert({
+                            user_id: currentUser.id,
+                            manufacturer: manufacturer,
+                            model: model,
+                            caliber: caliber,
+                            waffenart: waffenart || null,
+                            is_loan: isLoan,
+                            archived: false
+                        });
+                    
+                    if (error) throw error;
+                }
                 
                 // Reset form and reload
-                document.getElementById('weapon-form').reset();
+                cancelWeaponEdit();
                 loadWeapons();
                 
             } catch (error) {
@@ -1761,34 +1829,116 @@
             }
         }
         
-        // Add new ammo
-        async function addAmmo(event) {
+        // Edit weapon - fill form
+        async function editWeapon(id) {
+            try {
+                const { data: weapon, error } = await supabase
+                    .from('weapons')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+                
+                if (error) throw error;
+                
+                document.getElementById('weapon-id').value = weapon.id;
+                document.getElementById('weapon-manufacturer').value = weapon.manufacturer;
+                document.getElementById('weapon-model').value = weapon.model;
+                document.getElementById('weapon-caliber').value = weapon.caliber;
+                document.getElementById('weapon-type').value = weapon.waffenart || '';
+                document.getElementById('weapon-is-loan').checked = weapon.is_loan;
+                
+                document.getElementById('weapon-submit-btn').textContent = '💾 Aktualisieren';
+                document.getElementById('weapon-cancel-btn').style.display = 'inline-block';
+                
+            } catch (error) {
+                alert('Fehler: ' + error.message);
+            }
+        }
+        
+        // Cancel weapon edit
+        function cancelWeaponEdit() {
+            document.getElementById('weapon-form').reset();
+            document.getElementById('weapon-id').value = '';
+            document.getElementById('weapon-submit-btn').textContent = '💾 Hinzufügen';
+            document.getElementById('weapon-cancel-btn').style.display = 'none';
+        }
+        
+        // Save ammo (add or update)
+        async function saveAmmo(event) {
             event.preventDefault();
             
+            const id = document.getElementById('ammo-id').value;
             const manufacturer = document.getElementById('ammo-manufacturer').value;
             const caliber = document.getElementById('ammo-caliber').value;
             const weight = document.getElementById('ammo-weight').value;
             
             try {
-                const { error } = await supabase
-                    .from('ammunition')
-                    .insert({
-                        user_id: currentUser.id,
-                        manufacturer: manufacturer,
-                        caliber: caliber,
-                        weight_grains: weight ? parseInt(weight) : null,
-                        archived: false
-                    });
-                
-                if (error) throw error;
+                if (id) {
+                    // Update existing
+                    const { error } = await supabase
+                        .from('ammunition')
+                        .update({
+                            manufacturer: manufacturer,
+                            caliber: caliber,
+                            weight_grains: weight ? parseInt(weight) : null
+                        })
+                        .eq('id', id);
+                    
+                    if (error) throw error;
+                } else {
+                    // Insert new
+                    const { error } = await supabase
+                        .from('ammunition')
+                        .insert({
+                            user_id: currentUser.id,
+                            manufacturer: manufacturer,
+                            caliber: caliber,
+                            weight_grains: weight ? parseInt(weight) : null,
+                            archived: false
+                        });
+                    
+                    if (error) throw error;
+                }
                 
                 // Reset form and reload
-                document.getElementById('ammo-form').reset();
+                cancelAmmoEdit();
                 loadAmmo();
                 
             } catch (error) {
                 alert('Fehler: ' + error.message);
             }
+        }
+        
+        // Edit ammo - fill form
+        async function editAmmo(id) {
+            try {
+                const { data: ammo, error } = await supabase
+                    .from('ammunition')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+                
+                if (error) throw error;
+                
+                document.getElementById('ammo-id').value = ammo.id;
+                document.getElementById('ammo-manufacturer').value = ammo.manufacturer;
+                document.getElementById('ammo-caliber').value = ammo.caliber;
+                document.getElementById('ammo-weight').value = ammo.weight_grains || '';
+                
+                document.getElementById('ammo-submit-btn').textContent = '💾 Aktualisieren';
+                document.getElementById('ammo-cancel-btn').style.display = 'inline-block';
+                
+            } catch (error) {
+                alert('Fehler: ' + error.message);
+            }
+        }
+        
+        // Cancel ammo edit
+        function cancelAmmoEdit() {
+            document.getElementById('ammo-form').reset();
+            document.getElementById('ammo-id').value = '';
+            document.getElementById('ammo-submit-btn').textContent = '💾 Hinzufügen';
+            document.getElementById('ammo-cancel-btn').style.display = 'none';
         }
         
         // Archive weapon
@@ -1836,7 +1986,7 @@
             weapons.forEach(w => {
                 const option = document.createElement('option');
                 option.value = w.id;
-                option.textContent = `${w.manufacturer} ${w.model}`;
+                option.textContent = `${w.manufacturer} ${w.model}${w.is_loan ? ' (LEIH)' : ''}`;
                 select.appendChild(option);
             });
         }
@@ -2189,8 +2339,33 @@
         
         // Load Equipment Dropdowns
         async function loadEquipmentDropdowns() {
-            // TODO: Load from Supabase
-            // For now, empty dropdowns
+            try {
+                // Load weapons
+                const { data: weapons, error: wError } = await supabase
+                    .from('weapons')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .eq('archived', false)
+                    .order('manufacturer', { ascending: true });
+                
+                if (!wError && weapons) {
+                    updateWeaponDropdown(weapons);
+                }
+                
+                // Load ammo
+                const { data: ammo, error: aError } = await supabase
+                    .from('ammunition')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .eq('archived', false)
+                    .order('manufacturer', { ascending: true });
+                
+                if (!aError && ammo) {
+                    updateAmmoDropdown(ammo);
+                }
+            } catch (error) {
+                console.error('Error loading equipment:', error);
+            }
         }
         
         // Create input grids
