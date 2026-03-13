@@ -1,5 +1,0 @@
-[build]
-builder = "nodejs"
-
-[deploy]
-startCommand = "npx http-server -p $PORT"
