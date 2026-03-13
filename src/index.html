@@ -2608,14 +2608,6 @@
         function createStatsCharts(data) {
             const config = DISCIPLINE_CONFIG[statsDiscipline];
             
-            // Create time-based data points {x: date, y: value}
-            const createTimeData = (dates, values) => {
-                return dates.map((date, i) => ({
-                    x: date,
-                    y: values[i]
-                }));
-            };
-            
             const commonOptions = {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -2628,13 +2620,6 @@
                         ticks: { color: '#888' }
                     },
                     x: {
-                        type: 'time',
-                        time: {
-                            unit: 'month',
-                            displayFormats: {
-                                month: 'MMM yyyy'
-                            }
-                        },
                         grid: { color: '#3d3d54' },
                         ticks: { 
                             color: '#888',
@@ -2656,9 +2641,10 @@
             statsCharts.scoring = new Chart(document.getElementById('chart-scoring'), {
                 type: 'line',
                 data: {
+                    labels: data.dates,
                     datasets: [{ 
                         label: 'Wertung', 
-                        data: createTimeData(data.dates, data.scoring), 
+                        data: data.scoring, 
                         borderColor: '#FFC107', 
                         backgroundColor: 'rgba(255, 193, 7, 0.1)',
                         tension: 0.3,
@@ -2673,13 +2659,8 @@
             statsCharts.red = new Chart(document.getElementById('chart-red'), {
                 type: 'line',
                 data: {
-                    datasets: [{ 
-                        label: 'Rot', 
-                        data: createTimeData(data.dates, data.red), 
-                        borderColor: '#f44336', 
-                        tension: 0.3,
-                        spanGaps: true
-                    }]
+                    labels: data.dates,
+                    datasets: [{ label: 'Rot', data: data.red, borderColor: '#f44336', tension: 0.3, spanGaps: true }]
                 },
                 options: commonOptions
             });
@@ -2688,13 +2669,8 @@
             statsCharts.green = new Chart(document.getElementById('chart-green'), {
                 type: 'line',
                 data: {
-                    datasets: [{ 
-                        label: 'Grün', 
-                        data: createTimeData(data.dates, data.green), 
-                        borderColor: '#4CAF50', 
-                        tension: 0.3,
-                        spanGaps: true
-                    }]
+                    labels: data.dates,
+                    datasets: [{ label: 'Grün', data: data.green, borderColor: '#4CAF50', tension: 0.3, spanGaps: true }]
                 },
                 options: commonOptions
             });
@@ -2703,13 +2679,8 @@
             statsCharts.black = new Chart(document.getElementById('chart-black'), {
                 type: 'line',
                 data: {
-                    datasets: [{ 
-                        label: 'Schwarz', 
-                        data: createTimeData(data.dates, data.black), 
-                        borderColor: '#888', 
-                        tension: 0.3,
-                        spanGaps: true
-                    }]
+                    labels: data.dates,
+                    datasets: [{ label: 'Schwarz', data: data.black, borderColor: '#888', tension: 0.3, spanGaps: true }]
                 },
                 options: commonOptions
             });
@@ -2724,13 +2695,8 @@
                 statsCharts.duell = new Chart(document.getElementById('chart-duell'), {
                     type: 'line',
                     data: {
-                        datasets: [{ 
-                            label: 'Duell', 
-                            data: createTimeData(data.dates, data.duell), 
-                            borderColor: '#2196F3', 
-                            tension: 0.3,
-                            spanGaps: true
-                        }]
+                        labels: data.dates,
+                        datasets: [{ label: 'Duell', data: data.duell, borderColor: '#2196F3', tension: 0.3, spanGaps: true }]
                     },
                     options: commonOptions
                 });
