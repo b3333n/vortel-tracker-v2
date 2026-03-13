@@ -918,7 +918,7 @@
             background: #2d2d44;
             border-radius: 12px;
             overflow: hidden;
-            min-width: 700px;
+            min-width: 800px;
         }
         
         .history-table th {
@@ -986,6 +986,15 @@
         .score-duell { color: #2196F3; font-weight: 600; }
         .score-combined { color: #9C27B0; font-weight: 700; }
         .score-total { color: #FFC107; font-weight: 700; font-size: 1.1rem; }
+        
+        .weapon-cell {
+            font-size: 0.85rem;
+            color: #aaa;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
         
         .empty-state {
             text-align: center;
@@ -1475,29 +1484,66 @@
 
             <!-- Historie Page -->
             <div id="page-history" class="page" style="display: none;">
+                <!-- Filter Section - V1 Style -->
                 <div class="card">
-                    <div class="card-title">📜 Historie</div>
+                    <div style="font-size: 0.85rem; color: #888; margin-bottom: 15px; text-align: center;">
+                        🔍 Filter (optional)
+                    </div>
                     
-                    <!-- Filters -->
-                    <div class="filters">
-                        <div class="filter-group">
-                            <label class="filter-label">Disziplin</label>
-                            <select id="filter-discipline" class="filter-select" onchange="loadHistory()">
-                                <option value="">Alle</option>
-                                <option value="KK">🔫 KK</option>
-                                <option value="GK">🎯 GK</option>
-                                <option value="VL">⚫ VL</option>
+                    <!-- Waffe & Munition -->
+                    <div class="filters-row">
+                        <div class="filter-col">
+                            <label class="filter-label-small">🔫 Waffe</label>
+                            <select id="filter-weapon" class="filter-input" onchange="loadHistory()">
+                                <option value="">Alle Waffen</option>
                             </select>
                         </div>
-                        <div class="filter-group">
-                            <label class="filter-label">Typ</label>
-                            <select id="filter-type" class="filter-select" onchange="loadHistory()">
-                                <option value="">Alle</option>
-                                <option value="VO">Vortel</option>
-                                <option value="TR">Training</option>
+                        <div class="filter-col">
+                            <label class="filter-label-small">💣 Munition</label>
+                            <select id="filter-ammo" class="filter-input" onchange="loadHistory()">
+                                <option value="">Alle Munition</option>
                             </select>
                         </div>
                     </div>
+                    
+                    <!-- Disziplin -->
+                    <div style="margin-bottom: 10px;">
+                        <label class="filter-label-small">🎯 Disziplin</label>
+                        <select id="filter-discipline" class="filter-input" onchange="loadHistory()">
+                            <option value="">Alle Disziplinen</option>
+                            <option value="KK">🔫 Kleinkaliber (KK)</option>
+                            <option value="GK">🎯 Großkaliber (GK)</option>
+                            <option value="VL">⚫ Vorderlader (VL)</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Typ -->
+                    <div style="margin-bottom: 10px;">
+                        <label class="filter-label-small">📋 Typ</label>
+                        <select id="filter-type" class="filter-input" onchange="loadHistory()">
+                            <option value="">Alle Typen</option>
+                            <option value="VO">🔴 Vortel (VO)</option>
+                            <option value="TR">🟢 Training (TR)</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Datum -->
+                    <div class="filters-dates">
+                        <div class="filter-date-col">
+                            <label class="filter-label-small">📅 Von</label>
+                            <input type="date" id="filter-from" class="filter-date-input" onchange="loadHistory()">
+                        </div>
+                        <div class="filter-date-col">
+                            <label class="filter-label-small">📅 Bis</label>
+                            <input type="date" id="filter-to" class="filter-date-input" onchange="loadHistory()">
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="btn btn-primary" onclick="loadHistory()" style="flex: 1;">🔍 Filtern</button>
+                        <button class="btn btn-secondary" onclick="resetHistoryFilters()" style="flex: 1;">↩️ Zurücksetzen</button>
+                    </div>
+                </div>
                     
                     <!-- Scroll hint for mobile -->
                     <div class="scroll-hint">← Wischen für mehr Spalten →</div>
@@ -1508,14 +1554,16 @@
                             <thead>
                                 <tr>
                                     <th>Datum</th>
-                                    <th>Disziplin</th>
-                                    <th>Typ</th>
-                                    <th class="red-header">Rot</th>
-                                    <th class="green-header">Grün</th>
-                                    <th class="black-header">Schwarz</th>
-                                    <th class="duell-header">Duell</th>
-                                    <th class="combined-header">Grün+Duell</th>
-                                    <th class="total-header">Gesamt</th>
+                                    <th>#</th>
+                                    <th>🎯 Disziplin</th>
+                                    <th>📋 Typ</th>
+                                    <th>🔫 Waffe</th>
+                                    <th class="red-header">🔴 Rot</th>
+                                    <th class="green-header">🟢 Grün</th>
+                                    <th class="duell-header">⚔️ Duell</th>
+                                    <th class="black-header">⚫ Schwarz</th>
+                                    <th class="combined-header">🟢+⚔️</th>
+                                    <th class="total-header">🏆 Gesamt</th>
                                 </tr>
                             </thead>
                             <tbody id="history-tbody">
@@ -2076,6 +2124,7 @@
             
             // Load history if history page
             if (page === 'history') {
+                loadHistoryFilters();
                 loadHistory();
             }
             
@@ -3242,6 +3291,54 @@
         // ========== HISTORY LOGIC ==========
         
         // Load and display history
+        async function loadHistoryFilters() {
+            // Load weapons for filter
+            const { data: weapons } = await supabase
+                .from('weapons')
+                .select('id, manufacturer, model')
+                .eq('user_id', currentUser.id)
+                .eq('archived', false)
+                .order('manufacturer', { ascending: true });
+            
+            const weaponSelect = document.getElementById('filter-weapon');
+            if (weaponSelect) {
+                weaponSelect.innerHTML = '<option value="">Alle Waffen</option>';
+                if (weapons) {
+                    weapons.forEach(w => {
+                        weaponSelect.innerHTML += `<option value="${w.id}">${w.manufacturer} ${w.model}</option>`;
+                    });
+                }
+            }
+            
+            // Load ammo for filter
+            const { data: ammo } = await supabase
+                .from('ammunition')
+                .select('id, manufacturer, caliber')
+                .eq('user_id', currentUser.id)
+                .eq('archived', false)
+                .order('manufacturer', { ascending: true });
+            
+            const ammoSelect = document.getElementById('filter-ammo');
+            if (ammoSelect) {
+                ammoSelect.innerHTML = '<option value="">Alle Munition</option>';
+                if (ammo) {
+                    ammo.forEach(a => {
+                        ammoSelect.innerHTML += `<option value="${a.id}">${a.manufacturer} ${a.caliber}</option>`;
+                    });
+                }
+            }
+        }
+        
+        function resetHistoryFilters() {
+            document.getElementById('filter-discipline').value = '';
+            document.getElementById('filter-type').value = '';
+            document.getElementById('filter-weapon').value = '';
+            document.getElementById('filter-ammo').value = '';
+            document.getElementById('filter-from').value = '';
+            document.getElementById('filter-to').value = '';
+            loadHistory();
+        }
+        
         async function loadHistory() {
             const tbody = document.getElementById('history-tbody');
             const emptyState = document.getElementById('history-empty');
@@ -3263,13 +3360,16 @@
                         date,
                         discipline,
                         session_type,
+                        weapon_id,
+                        ammunition_id,
                         results (
                             target_type,
                             value
                         ),
                         duell_totals (
                             total
-                        )
+                        ),
+                        weapons (manufacturer, model)
                     `)
                     .eq('user_id', currentUser.id)
                     .order('date', { ascending: false })
@@ -3278,13 +3378,17 @@
                 // Apply filters
                 const disciplineFilter = document.getElementById('filter-discipline')?.value;
                 const typeFilter = document.getElementById('filter-type')?.value;
+                const weaponFilter = document.getElementById('filter-weapon')?.value;
+                const ammoFilter = document.getElementById('filter-ammo')?.value;
+                const fromDate = document.getElementById('filter-from')?.value;
+                const toDate = document.getElementById('filter-to')?.value;
                 
-                if (disciplineFilter) {
-                    query = query.eq('discipline', disciplineFilter);
-                }
-                if (typeFilter) {
-                    query = query.eq('session_type', typeFilter);
-                }
+                if (disciplineFilter) query = query.eq('discipline', disciplineFilter);
+                if (typeFilter) query = query.eq('session_type', typeFilter);
+                if (weaponFilter) query = query.eq('weapon_id', weaponFilter);
+                if (ammoFilter) query = query.eq('ammunition_id', ammoFilter);
+                if (fromDate) query = query.gte('date', fromDate);
+                if (toDate) query = query.lte('date', toDate);
                 
                 const { data: sessions, error } = await query;
                 
@@ -3332,14 +3436,22 @@
                     // Determine if VL (no duell)
                     const isVL = session.discipline === 'VL';
                     
+                    // Row number (index + 1)
+                    const rowNum = tbody.children.length + 1;
+                    
+                    // Weapon info
+                    const weaponInfo = session.weapons ? `${session.weapons.manufacturer} ${session.weapons.model}` : '-';
+                    
                     row.innerHTML = `
                         <td class="date-cell">${dateStr}</td>
+                        <td>${rowNum}</td>
                         <td><span class="discipline-badge ${session.discipline.toLowerCase()}">${session.discipline}</span></td>
                         <td><span class="type-badge ${session.session_type.toLowerCase()}">${session.session_type === 'VO' ? 'Vortel' : 'Training'}</span></td>
+                        <td class="weapon-cell">${weaponInfo}</td>
                         <td class="score-red">${session.session_type === 'TR' ? '-' : redTotal}</td>
                         <td class="score-green">${session.session_type === 'TR' ? '-' : greenTotal}</td>
-                        <td class="score-black">${session.session_type === 'TR' ? '-' : blackTotal}</td>
                         <td class="score-duell">${session.session_type === 'TR' || isVL ? '-' : duellTotal}</td>
+                        <td class="score-black">${session.session_type === 'TR' ? '-' : blackTotal}</td>
                         <td class="score-combined">${session.session_type === 'TR' || isVL ? '-' : combined}</td>
                         <td class="score-total">${session.session_type === 'TR' ? '-' : grandTotal}</td>
                     `;
