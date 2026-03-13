@@ -314,6 +314,23 @@
         // Initialize Supabase client with config
         const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
         
+        // Handle auth callback (magic link redirect)
+        const hash = window.location.hash;
+        if (hash && hash.includes('access_token')) {
+            const params = new URLSearchParams(hash.substring(1));
+            const access_token = params.get('access_token');
+            const refresh_token = params.get('refresh_token');
+            if (access_token) {
+                supabase.auth.setSession({
+                    access_token: access_token,
+                    refresh_token: refresh_token
+                }).then(() => {
+                    window.location.hash = '';
+                    window.location.reload();
+                });
+            }
+        }
+        
         // Auth state
         let currentUser = null;
         
