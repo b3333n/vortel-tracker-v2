@@ -1737,8 +1737,8 @@
                             <div class="equipment-details">${weapon.caliber}${weapon.waffenart ? ' • ' + weapon.waffenart : ''}</div>
                         </div>
                         <div class="equipment-actions">
-                            <button class="btn-small" onclick="editWeapon(${weapon.id})" style="background: #4CAF50; color: white;">✏️</button>
-                            <button class="btn-small btn-archive" onclick="archiveWeapon(${weapon.id})">🗑️</button>
+                            <button class="btn-small" onclick="editWeapon(${weapon.id})" style="background: #4CAF50; color: white;">✏️ Bearbeiten</button>
+                            <button class="btn-small" onclick="archiveWeapon(${weapon.id})" style="background: #FF9800; color: white;">🗄️ Archiv</button>
                         </div>
                     `;
                     list.appendChild(item);
@@ -1785,8 +1785,8 @@
                             <div class="equipment-details">${a.weight_grains ? a.weight_grains + ' grains' : 'Kein Gewicht'}</div>
                         </div>
                         <div class="equipment-actions">
-                            <button class="btn-small" onclick="editAmmo(${a.id})" style="background: #4CAF50; color: white;">✏️</button>
-                            <button class="btn-small btn-archive" onclick="archiveAmmo(${a.id})">🗑️</button>
+                            <button class="btn-small" onclick="editAmmo(${a.id})" style="background: #4CAF50; color: white;">✏️ Bearbeiten</button>
+                            <button class="btn-small" onclick="archiveAmmo(${a.id})" style="background: #FF9800; color: white;">🗄️ Archiv</button>
                         </div>
                     `;
                     list.appendChild(item);
