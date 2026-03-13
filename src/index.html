@@ -131,6 +131,317 @@
             font-weight: 500;
         }
         
+        /* Session Input Styles */
+        .discipline-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .discipline-btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 12px;
+            border: 2px solid #3d3d54;
+            border-radius: 8px;
+            background: #1a1a2e;
+            color: #888;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .discipline-btn.active {
+            border-color: #4CAF50;
+            background: #1a3a1a;
+            color: #4CAF50;
+        }
+        
+        .discipline-subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .session-type-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 10px;
+            background: #1a1a2e;
+            border-radius: 8px;
+            border: 2px solid #3d3d54;
+        }
+        
+        .type-label {
+            font-weight: 600;
+        }
+        
+        .type-label#type-vortel {
+            color: #f44336;
+        }
+        
+        .type-label#type-training {
+            color: #4CAF50;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+            cursor: pointer;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #f44336;
+            transition: .3s;
+            border-radius: 24px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: '';
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #4CAF50;
+        }
+        
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        /* Target Sections */
+        .target-section {
+            background: #2d2d44;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .target-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .target-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .target-icon.red { background: #f44336; }
+        .target-icon.green { background: #4CAF50; }
+        .target-icon.black { background: #333; border: 2px solid #666; }
+        .target-icon.duell { background: #2196F3; }
+        
+        .target-hint {
+            color: #888;
+            font-size: 0.85rem;
+            font-weight: normal;
+            margin-left: 8px;
+        }
+        
+        .shots-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .shot-input {
+            width: 100%;
+            aspect-ratio: 1;
+            border: 2px solid #3d3d54;
+            border-radius: 8px;
+            background: #1a1a2e;
+            color: #eee;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+            outline: none;
+            transition: all 0.2s;
+        }
+        
+        .shot-input:focus {
+            border-color: #4CAF50;
+            background: #252540;
+        }
+        
+        .target-total {
+            text-align: right;
+            font-size: 0.9rem;
+            color: #888;
+        }
+        
+        .target-total span {
+            color: #FFC107;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        /* Duell Mode Toggle */
+        .duell-mode-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .mode-btn {
+            flex: 1;
+            padding: 10px;
+            background: #1a1a2e;
+            border: 2px solid #3d3d54;
+            border-radius: 8px;
+            color: #aaa;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .mode-btn.active {
+            border-color: #2196F3;
+            color: #2196F3;
+            background: #1a3a5c;
+        }
+        
+        .duell-total-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #3d3d54;
+            border-radius: 8px;
+            background: #1a1a2e;
+            color: #eee;
+            font-size: 1.3rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        /* Summary Box */
+        .summary-box {
+            background: linear-gradient(135deg, #2d2d44, #3d3d54);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        
+        .summary-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #4CAF50;
+            font-size: 1.2rem;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #4d4d64;
+        }
+        
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+        
+        .summary-row.combined {
+            background: rgba(76, 175, 80, 0.1);
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .summary-row.total {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 10px;
+            padding-top: 15px;
+            border-top: 2px solid #4d4d64;
+        }
+        
+        .summary-row.detail {
+            font-size: 0.9rem;
+            padding: 6px 0;
+        }
+        
+        .summary-label {
+            color: #aaa;
+        }
+        
+        .summary-value {
+            color: #eee;
+            font-weight: 600;
+        }
+        
+        .summary-value.gold {
+            color: #FFC107;
+            font-size: 1.4rem;
+        }
+        
+        /* Save Button */
+        .save-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 20px 0;
+        }
+        
+        .save-btn:hover {
+            background: linear-gradient(135deg, #45a049, #3d8b40);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+        
+        @media (max-width: 600px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+        
         /* Auth Section */
         .auth-section {
             background: #2d2d44;
@@ -410,10 +721,181 @@
 
             <!-- Eingabe Page (Startseite) -->
             <div id="page-input" class="page active">
+                <!-- Session Meta -->
                 <div class="card">
-                    <div class="card-title">✏️ Neue Session</div>
-                    <p>Coming soon...</p>
+                    <div class="card-title">📋 Session-Details</div>
+                    
+                    <!-- Date -->
+                    <div class="form-group">
+                        <label class="form-label">Datum</label>
+                        <input type="date" id="session-date" class="form-input" style="max-width: 160px;">
+                    </div>
+                    
+                    <!-- Discipline Selector -->
+                    <div class="form-group">
+                        <label class="form-label">Disziplin</label>
+                        <div class="discipline-selector">
+                            <button type="button" class="discipline-btn active" data-discipline="KK" onclick="setDiscipline('KK')">🔫 KK</button>
+                            <button type="button" class="discipline-btn" data-discipline="GK" onclick="setDiscipline('GK')">🎯 GK</button>
+                            <button type="button" class="discipline-btn" data-discipline="VL" onclick="setDiscipline('VL')">⚫ VL</button>
+                        </div>
+                        <div id="discipline-subtitle" class="discipline-subtitle">Kleinkaliber - 5/15/10/15</div>
+                    </div>
+                    
+                    <!-- Session Type Toggle -->
+                    <div class="form-group">
+                        <label class="form-label">Typ</label>
+                        <div class="session-type-toggle">
+                            <span class="type-label" id="type-vortel">Vortel</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="session-type-toggle" onchange="toggleSessionType()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="type-label" id="type-training">Training</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Weapon & Ammunition -->
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Waffe (optional)</label>
+                            <select id="session-weapon" class="form-input">
+                                <option value="">-- Waffe wählen --</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Munition (optional)</label>
+                            <select id="session-ammunition" class="form-input">
+                                <option value="">-- Munition wählen --</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
+                
+                <!-- Training Only Fields -->
+                <div id="training-only" class="card" style="display: none;">
+                    <div class="card-title">📝 Training Details</div>
+                    <div class="form-group">
+                        <label class="form-label">Notizen</label>
+                        <textarea id="training-notes" class="form-input" rows="3" placeholder="Was hast du trainiert?"></textarea>
+                    </div>
+                </div>
+                
+                <!-- Targets Section (hidden for training) -->
+                <div id="targets-section">
+                    <!-- Red Target -->
+                    <div class="target-section">
+                        <div class="target-header">
+                            <div class="target-icon red">🔴</div>
+                            <div>Rote Scheibe <span class="target-hint">(nur 10 oder 0)</span></div>
+                        </div>
+                        <div class="shots-grid" id="red-grid"></div>
+                        <div class="target-total">
+                            Treffer: <span id="red-hits">0</span>/5 | Punkte: <span id="red-total">0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Green Target -->
+                    <div class="target-section">
+                        <div class="target-header">
+                            <div class="target-icon green">🟢</div>
+                            <div>Grüne Scheibe <span id="green-shot-count" class="target-hint">(15 Schuss)</span></div>
+                        </div>
+                        <div class="shots-grid" id="green-grid"></div>
+                        <div class="target-total">
+                            Summe: <span id="green-total">0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Black Target -->
+                    <div class="target-section">
+                        <div class="target-header">
+                            <div class="target-icon black">⚫</div>
+                            <div>Schwarze Scheibe <span class="target-hint">(10 Schuss)</span></div>
+                        </div>
+                        <div class="shots-grid" id="black-grid"></div>
+                        <div class="target-total">
+                            Summe: <span id="black-total">0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Duell Target -->
+                    <div class="target-section" id="duell-section">
+                        <div class="target-header">
+                            <div class="target-icon duell">⚔️</div>
+                            <div>Duell <span id="duell-shot-count" class="target-hint">(15 Schuss)</span></div>
+                        </div>
+                        
+                        <!-- Duell Mode Toggle -->
+                        <div class="duell-mode-toggle">
+                            <button type="button" class="mode-btn active" id="mode-shots" onclick="setDuellMode('shots')">Einzelne Schüsse</button>
+                            <button type="button" class="mode-btn" id="mode-total" onclick="setDuellMode('total')">Gesamtpunktzahl</button>
+                        </div>
+                        
+                        <!-- Shots Mode -->
+                        <div id="duell-shots-mode">
+                            <div class="shots-grid" id="duell-grid"></div>
+                            <div class="target-total">
+                                Summe: <span id="duell-total-display">0</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Total Mode -->
+                        <div id="duell-total-mode" style="display: none;">
+                            <input type="number" id="duell-total-input" class="duell-total-input" placeholder="Gesamtpunktzahl" min="0" max="150" onchange="calculateSummary()">
+                        </div>
+                    </div>
+                    
+                    <!-- Summary -->
+                    <div class="summary-box">
+                        <div class="summary-title">📊 Zusammenfassung</div>
+                        <div class="summary-row combined">
+                            <span class="summary-label" id="summary-combined-label">🟢 Grün + ⚔️ Duell</span>
+                            <span class="summary-value" id="summary-combined">0</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">⚫ Schwarz</span>
+                            <span class="summary-value" id="summary-black-split">0</span>
+                        </div>
+                        <div class="summary-row detail">
+                            <span class="summary-label">🔴 Rot</span>
+                            <span class="summary-value" id="summary-red">0</span>
+                        </div>
+                        <div class="summary-row detail">
+                            <span class="summary-label">🟢 Grün</span>
+                            <span class="summary-value" id="summary-green">0</span>
+                        </div>
+                        <div class="summary-row detail">
+                            <span class="summary-label">⚫ Schwarz</span>
+                            <span class="summary-value" id="summary-black">0</span>
+                        </div>
+                        <div class="summary-row detail" id="summary-duell-row">
+                            <span class="summary-label">⚔️ Duell</span>
+                            <span class="summary-value" id="summary-duell">0</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span class="summary-label">🏆 Summe</span>
+                            <span class="summary-value gold" id="summary-total">0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Location & Notes -->
+                    <div class="card">
+                        <div class="form-group">
+                            <label class="form-label">Schießstand (optional)</label>
+                            <input type="text" id="session-location" class="form-input" placeholder="z.B. Höltzl Bruck">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Notizen (optional)</label>
+                            <textarea id="session-notes" class="form-input" rows="2" placeholder="Besonderheiten..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Save Button -->
+                <button class="save-btn" onclick="saveSession()">
+                    💾 Speichern
+                </button>
             </div>
 
             <!-- Historie Page -->
@@ -661,6 +1143,8 @@
             // Set user initials
             const initials = getUserInitials();
             document.getElementById('user-initials').textContent = initials;
+            // Initialize session input
+            initSessionInput();
         }
         
         // Get user initials from profile or email
@@ -835,6 +1319,294 @@
         
         // Initialize
         checkAuth();
+        
+        // ========== SESSION INPUT LOGIC ==========
+        
+        // State
+        let currentDiscipline = 'KK';
+        let currentSessionType = 'VO';
+        let duellMode = 'shots';
+        let waitForTenTimer = null;
+        
+        // Disziplin-Konfiguration (wie in V1)
+        const DISCIPLINE_CONFIG = {
+            KK: { green: 15, black: 10, duell: 15, duellMax: 150, hasDuell: true, subtitle: 'Kleinkaliber - 5/15/10/15' },
+            GK: { green: 20, black: 10, duell: 20, duellMax: 200, hasDuell: true, subtitle: 'Großkaliber - 5/20/10/20' },
+            VL: { green: 10, black: 10, duell: 0, duellMax: 0, hasDuell: false, subtitle: 'Vorderlader - 5/10/10' }
+        };
+        
+        // Initialize Session Input
+        function initSessionInput() {
+            document.getElementById('session-date').valueAsDate = new Date();
+            createInputGrids();
+            loadEquipmentDropdowns();
+        }
+        
+        // Disziplin wechseln
+        function setDiscipline(discipline) {
+            currentDiscipline = discipline;
+            const config = DISCIPLINE_CONFIG[discipline];
+            
+            // UI aktualisieren
+            document.querySelectorAll('.discipline-btn').forEach(btn => {
+                if (btn.dataset.discipline === discipline) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            // Subtitle aktualisieren
+            document.getElementById('discipline-subtitle').textContent = config.subtitle;
+            
+            // Schusszahl-Anzeigen aktualisieren
+            document.getElementById('green-shot-count').textContent = `(${config.green} Schuss)`;
+            if (config.hasDuell) {
+                document.getElementById('duell-shot-count').textContent = `(${config.duell} Schuss)`;
+                document.getElementById('duell-section').style.display = 'block';
+                document.getElementById('duell-total-input').max = config.duellMax;
+                document.getElementById('duell-total-input').placeholder = `Gesamtpunktzahl (max ${config.duellMax})`;
+            } else {
+                document.getElementById('duell-section').style.display = 'none';
+            }
+            
+            // Input-Grids neu erstellen
+            createInputGrids();
+            
+            // Berechnungen zurücksetzen
+            calculateSummary();
+        }
+        
+        // Session Type Toggle
+        function toggleSessionType() {
+            const toggle = document.getElementById('session-type-toggle');
+            currentSessionType = toggle.checked ? 'TR' : 'VO';
+            updateSessionTypeUI();
+        }
+        
+        function updateSessionTypeUI() {
+            const isTraining = currentSessionType === 'TR';
+            const targetsSection = document.getElementById('targets-section');
+            const trainingOnly = document.getElementById('training-only');
+            const saveBtn = document.querySelector('.save-btn');
+            
+            if (isTraining) {
+                targetsSection.style.display = 'none';
+                trainingOnly.style.display = 'block';
+                saveBtn.textContent = '💾 Training speichern';
+            } else {
+                targetsSection.style.display = 'block';
+                trainingOnly.style.display = 'none';
+                saveBtn.textContent = '💾 Speichern';
+            }
+        }
+        
+        // Duell Mode Toggle
+        function setDuellMode(mode) {
+            duellMode = mode;
+            document.getElementById('mode-shots').classList.toggle('active', mode === 'shots');
+            document.getElementById('mode-total').classList.toggle('active', mode === 'total');
+            document.getElementById('duell-shots-mode').style.display = mode === 'shots' ? 'block' : 'none';
+            document.getElementById('duell-total-mode').style.display = mode === 'total' ? 'block' : 'none';
+            calculateSummary();
+        }
+        
+        // Load Equipment Dropdowns
+        async function loadEquipmentDropdowns() {
+            // TODO: Load from Supabase
+            // For now, empty dropdowns
+        }
+        
+        // Create input grids
+        function createInputGrids() {
+            const config = DISCIPLINE_CONFIG[currentDiscipline];
+            
+            // Red: 5 inputs
+            const redGrid = document.getElementById('red-grid');
+            redGrid.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                redGrid.innerHTML += `<input type="tel" class="shot-input" id="red-${i}" placeholder="${i}" onchange="validateAndCalculate(this, true)" oninput="autoTab(this)">`;
+            }
+            
+            // Green: dynamisch
+            const greenGrid = document.getElementById('green-grid');
+            greenGrid.innerHTML = '';
+            for (let i = 1; i <= config.green; i++) {
+                greenGrid.innerHTML += `<input type="tel" class="shot-input" id="green-${i}" placeholder="${i}" onchange="validateAndCalculate(this, false)" oninput="autoTab(this)">`;
+            }
+            
+            // Black: 10 inputs
+            const blackGrid = document.getElementById('black-grid');
+            blackGrid.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                blackGrid.innerHTML += `<input type="tel" class="shot-input" id="black-${i}" placeholder="${i}" onchange="validateAndCalculate(this, false)" oninput="autoTab(this)">`;
+            }
+            for (let i = 6; i <= 10; i++) {
+                blackGrid.innerHTML += `<input type="tel" class="shot-input" id="black-${i}" placeholder="${i}" onchange="validateAndCalculate(this, false)" oninput="autoTab(this)">`;
+            }
+            
+            // Duell: dynamisch
+            if (config.hasDuell) {
+                const duellGrid = document.getElementById('duell-grid');
+                duellGrid.innerHTML = '';
+                for (let i = 1; i <= config.duell; i++) {
+                    duellGrid.innerHTML += `<input type="tel" class="shot-input" id="duell-${i}" placeholder="${i}" onchange="validateAndCalculate(this, false)" oninput="autoTab(this)">`;
+                }
+            }
+        }
+        
+        // Auto-Tab Logik (wie in V1)
+        function autoTab(input) {
+            const val = input.value;
+            
+            if (val === '1') {
+                if (waitForTenTimer) clearTimeout(waitForTenTimer);
+                waitForTenTimer = setTimeout(() => {
+                    performAutoTab(input);
+                    waitForTenTimer = null;
+                }, 400);
+            } else if (val === '10') {
+                if (waitForTenTimer) {
+                    clearTimeout(waitForTenTimer);
+                    waitForTenTimer = null;
+                }
+                performAutoTab(input);
+            } else if (val.length === 1) {
+                if (waitForTenTimer) {
+                    clearTimeout(waitForTenTimer);
+                    waitForTenTimer = null;
+                }
+                performAutoTab(input);
+            }
+        }
+        
+        function performAutoTab(input) {
+            const currentId = input.id;
+            const [target, numStr] = currentId.split('-');
+            const num = parseInt(numStr);
+            const config = DISCIPLINE_CONFIG[currentDiscipline];
+            
+            // Bei roter Scheibe: nur 0 oder 10 erlaubt
+            if (target === 'red') {
+                const val = parseInt(input.value);
+                if (val !== 0 && val !== 10) return;
+            }
+            
+            let nextId = null;
+            
+            if (target === 'red') {
+                if (num < 5) nextId = `red-${num + 1}`;
+                else nextId = `green-${config.green}`;
+            } else if (target === 'green') {
+                if (num > 1) nextId = `green-${num - 1}`;
+                else nextId = 'black-10';
+            } else if (target === 'black') {
+                if (num > 1) nextId = `black-${num - 1}`;
+                else {
+                    if (duellMode === 'total') {
+                        nextId = 'duell-total-input';
+                    } else {
+                        nextId = `duell-${config.duell}`;
+                    }
+                }
+            } else if (target === 'duell') {
+                if (num > 1) nextId = `duell-${num - 1}`;
+            }
+            
+            if (nextId) {
+                const nextInput = document.getElementById(nextId);
+                if (nextInput) nextInput.focus();
+            }
+        }
+        
+        // Validate and Calculate
+        function validateAndCalculate(input, isRed) {
+            const val = parseInt(input.value);
+            
+            if (isRed && val !== 0 && val !== 10) {
+                input.style.borderColor = '#f44336';
+            } else if (val < 0 || val > 10) {
+                input.style.borderColor = '#f44336';
+            } else {
+                input.style.borderColor = '#3d3d54';
+            }
+            
+            calculateSummary();
+        }
+        
+        // Calculate Summary
+        function calculateSummary() {
+            const config = DISCIPLINE_CONFIG[currentDiscipline];
+            
+            // Red
+            let redHits = 0;
+            let redTotal = 0;
+            for (let i = 1; i <= 5; i++) {
+                const val = parseInt(document.getElementById(`red-${i}`)?.value) || 0;
+                if (val === 10) redHits++;
+                redTotal += val;
+            }
+            document.getElementById('red-hits').textContent = redHits;
+            document.getElementById('red-total').textContent = redTotal;
+            document.getElementById('summary-red').textContent = redTotal;
+            
+            // Green
+            let greenTotal = 0;
+            for (let i = 1; i <= config.green; i++) {
+                greenTotal += parseInt(document.getElementById(`green-${i}`)?.value) || 0;
+            }
+            document.getElementById('green-total').textContent = greenTotal;
+            document.getElementById('summary-green').textContent = greenTotal;
+            
+            // Black
+            let blackTotal = 0;
+            for (let i = 1; i <= 10; i++) {
+                blackTotal += parseInt(document.getElementById(`black-${i}`)?.value) || 0;
+            }
+            document.getElementById('black-total').textContent = blackTotal;
+            document.getElementById('summary-black').textContent = blackTotal;
+            document.getElementById('summary-black-split').textContent = blackTotal;
+            
+            // Duell
+            let duellTotal = 0;
+            if (config.hasDuell) {
+                if (duellMode === 'total') {
+                    duellTotal = parseInt(document.getElementById('duell-total-input')?.value) || 0;
+                } else {
+                    for (let i = 1; i <= config.duell; i++) {
+                        duellTotal += parseInt(document.getElementById(`duell-${i}`)?.value) || 0;
+                    }
+                }
+                document.getElementById('duell-total-display').textContent = duellTotal;
+                document.getElementById('summary-duell').textContent = duellTotal;
+                document.getElementById('summary-duell-row').style.display = 'flex';
+            } else {
+                document.getElementById('summary-duell-row').style.display = 'none';
+            }
+            
+            // Combined (Grün + Duell)
+            const combined = greenTotal + duellTotal;
+            document.getElementById('summary-combined').textContent = combined;
+            
+            // Total
+            const total = redTotal + greenTotal + blackTotal + duellTotal;
+            document.getElementById('summary-total').textContent = total;
+        }
+        
+        // Save Session
+        async function saveSession() {
+            const btn = document.querySelector('.save-btn');
+            btn.textContent = '💾 Speichern...';
+            btn.disabled = true;
+            
+            // TODO: Implement Supabase save
+            
+            setTimeout(() => {
+                alert('Session gespeichert! (Demo)');
+                btn.textContent = currentSessionType === 'TR' ? '💾 Training speichern' : '💾 Speichern';
+                btn.disabled = false;
+            }, 1000);
+        }
     </script>
 </body>
 </html>
