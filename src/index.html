@@ -1317,6 +1317,9 @@
                     <div class="menu-item" onclick="showPage('profile')">
                         👤 Profil
                     </div>
+                    <div class="menu-item" onclick="showPage('support')">
+                        💚 Projekt unterstützen
+                    </div>
                     <div class="menu-item" onclick="logout()">
                         🚪 Logout
                     </div>
@@ -2206,6 +2209,53 @@
                     </div>
                     <button type="submit" class="btn btn-primary">💾 Speichern</button>
                 </form>
+            </div>
+        </div>
+
+        <!-- Support Page -->
+        <div id="page-support" class="page" style="display: none;">
+            <div class="card" style="text-align: center; padding: 30px;">
+                <div style="font-size: 64px; margin-bottom: 20px;">☕🎯</div>
+                <div style="font-size: 1.4rem; font-weight: 600; margin-bottom: 15px; color: #FFC107;">Lade den Schützenbruder auf einen Kaffee ein</div>
+                <p style="color: #aaa; line-height: 1.6; margin-bottom: 25px; font-size: 1rem;">
+                    Dieses Projekt wird aktuell ehrenamtlich betrieben. Jede Spende hilft mir sehr bei der Deckung der monatlichen Server-Kosten & Weiterentwicklung!
+                </p>
+                
+                <!-- Donate Buttons -->
+                <div style="display: grid; gap: 15px; margin-bottom: 25px;">
+                    <a href="https://www.paypal.com/paypalme/BenediktPopp/6" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 24px; border-radius: 12px; text-decoration: none; font-size: 1.1rem; font-weight: 600; background: #3d3d54; color: #eee; border: 2px solid #4CAF50; transition: all 0.3s;">
+                        <span>☕</span>
+                        <span style="font-size: 1.5rem; font-weight: 700;">6 €</span>
+                        <span>Eine Schachtel KK</span>
+                    </a>
+                    <a href="https://www.paypal.com/paypalme/BenediktPopp/11" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 24px; border-radius: 12px; text-decoration: none; font-size: 1.1rem; font-weight: 600; background: #3d3d54; color: #eee; border: 2px solid #4CAF50; transition: all 0.3s;">
+                        <span>🎯</span>
+                        <span style="font-size: 1.5rem; font-weight: 700;">11 €</span>
+                        <span>Eine Schachtel GK</span>
+                    </a>
+                    <a href="https://www.paypal.com/paypalme/BenediktPopp/25" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 24px; border-radius: 12px; text-decoration: none; font-size: 1.1rem; font-weight: 600; background: #3d3d54; color: #eee; border: 2px solid #4CAF50; transition: all 0.3s;">
+                        <span>🏆</span>
+                        <span style="font-size: 1.5rem; font-weight: 700;">25 €</span>
+                        <span>Blattl!</span>
+                    </a>
+                    <a href="https://www.paypal.com/paypalme/BenediktPopp" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 24px; border-radius: 12px; text-decoration: none; font-size: 1.1rem; font-weight: 600; background: linear-gradient(135deg, #0070ba 0%, #005ea6 100%); color: white; transition: all 0.3s;">
+                        <span>💚</span>
+                        <span>Freier Betrag via PayPal</span>
+                    </a>
+                </div>
+                
+                <!-- Direct Link -->
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #3d3d54;">
+                    <p style="color: #888; font-size: 0.9rem; margin-bottom: 10px;">Direktlink:</p>
+                    <code style="background: #1a1a2e; padding: 10px 15px; border-radius: 8px; display: inline-block; font-size: 0.85rem; color: #4CAF50; word-break: break-all;">
+                        paypal.me/BenediktPopp
+                    </code>
+                </div>
+            </div>
+            
+            <!-- Thank You -->
+            <div style="text-align: center; color: #666; font-size: 0.85rem; margin-top: 30px; padding: 20px; border-top: 1px solid #3d3d54;">
+                <p>Vielen Dank für deine Unterstützung! <span style="color: #f44336;">❤️</span></p>
             </div>
         </div>
     </div>
