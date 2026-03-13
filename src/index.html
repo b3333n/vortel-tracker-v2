@@ -795,15 +795,83 @@
         
         /* History Page Styles */
         .filters {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 15px;
             margin-bottom: 20px;
-            flex-wrap: wrap;
         }
         
         .filter-group {
+            min-width: 0;
+        }
+        
+        /* Stats Filter - V1 Style */
+        .filters-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .filter-col {
             flex: 1;
-            min-width: 150px;
+        }
+        
+        .filter-label-small {
+            display: block;
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 4px;
+        }
+        
+        .filter-input {
+            width: 100%;
+            padding: 10px;
+            background: #1a1a2e;
+            border: 2px solid #3d3d54;
+            border-radius: 8px;
+            color: #eee;
+            font-size: 0.9rem;
+        }
+        
+        .filters-dates {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .filter-date-col {
+            text-align: center;
+        }
+        
+        .filter-date-input {
+            width: 140px;
+            padding: 10px;
+            background: #1a1a2e;
+            border: 2px solid #3d3d54;
+            border-radius: 8px;
+            color: #eee;
+            font-size: 0.9rem;
+        }
+        
+        .btn-reset {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 500px) {
+            .filters-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .filters-dates {
+                gap: 10px;
+            }
+            .filter-date-input {
+                width: 120px;
+                padding: 8px;
+            }
         }
         
         .filter-label {
@@ -1480,31 +1548,37 @@
                     </div>
                 </div>
                 
-                <!-- Filters -->
+                <!-- Filters - V1 Style -->
                 <div class="card">
-                    <div class="filters">
-                        <div class="filter-group">
-                            <label class="filter-label">Waffe</label>
-                            <select id="stats-filter-weapon" class="filter-select" onchange="loadStats()">
+                    <!-- Waffe & Munition nebeneinander -->
+                    <div class="filters-row">
+                        <div class="filter-col">
+                            <label class="filter-label-small">🔫 Waffe</label>
+                            <select id="stats-filter-weapon" class="filter-input" onchange="loadStats()">
                                 <option value="">Alle Waffen</option>
                             </select>
                         </div>
-                        <div class="filter-group">
-                            <label class="filter-label">Munition</label>
-                            <select id="stats-filter-ammo" class="filter-select" onchange="loadStats()">
+                        <div class="filter-col">
+                            <label class="filter-label-small">💣 Munition</label>
+                            <select id="stats-filter-ammo" class="filter-input" onchange="loadStats()">
                                 <option value="">Alle Munition</option>
                             </select>
                         </div>
-                        <div class="filter-group">
-                            <label class="filter-label">Von</label>
-                            <input type="date" id="stats-filter-from" class="filter-select" onchange="loadStats()">
+                    </div>
+                    
+                    <!-- Datum zentriert -->
+                    <div class="filters-dates">
+                        <div class="filter-date-col">
+                            <label class="filter-label-small">📅 Von</label>
+                            <input type="date" id="stats-filter-from" class="filter-date-input" onchange="loadStats()">
                         </div>
-                        <div class="filter-group">
-                            <label class="filter-label">Bis</label>
-                            <input type="date" id="stats-filter-to" class="filter-select" onchange="loadStats()">
+                        <div class="filter-date-col">
+                            <label class="filter-label-small">📅 Bis</label>
+                            <input type="date" id="stats-filter-to" class="filter-date-input" onchange="loadStats()">
                         </div>
                     </div>
-                    <button class="btn btn-secondary" onclick="resetStatsFilters()" style="margin-top: 10px;">🔄 Filter zurücksetzen</button>
+                    
+                    <button class="btn btn-secondary btn-reset" onclick="resetStatsFilters()">🔄 Filter zurücksetzen</button>
                 </div>
                 
                 <!-- Loading -->
