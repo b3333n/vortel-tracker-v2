@@ -1300,6 +1300,9 @@
                     <div class="menu-item" onclick="showPage('stats')">
                         📈 Statistik
                     </div>
+                    <div class="menu-item" onclick="showPage('beduerfnis')">
+                        📋 Bedürfnisnachweis
+                    </div>
                     <div class="menu-divider"></div>
                     <div class="menu-item" onclick="showPage('profile')">
                         👤 Profil
@@ -1334,6 +1337,7 @@
                 <button class="nav-btn active" data-page="input" onclick="showPage('input')">✏️ Eingabe</button>
                 <button class="nav-btn" data-page="history" onclick="showPage('history')">📜 Historie</button>
                 <button class="nav-btn" data-page="stats" onclick="showPage('stats')">📈 Statistik</button>
+                <button class="nav-btn" data-page="beduerfnis" onclick="showPage('beduerfnis')">📋 Bedürfnis</button>
             </div>
 
             <!-- Eingabe Page (Startseite) -->
@@ -1772,6 +1776,57 @@
                                 <canvas id="chart-duell"></canvas>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bedürfnisnachweis Page -->
+            <div id="page-beduerfnis" class="page" style="display: none;">
+                <div class="card">
+                    <div class="card-title">📋 Bedürfnisnachweis</div>
+                    <p style="color: #888; font-size: 0.9rem; margin-bottom: 15px;">Nachweis für Schusswaffen-Besitz (§12 WaffG)</p>
+                    
+                    <!-- Controls -->
+                    <div class="form-row" style="margin-bottom: 15px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">📅 Stichtag</label>
+                            <input type="date" id="beduerfnis-stichtag" class="form-input">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">📋 Typ</label>
+                            <select id="beduerfnis-type" class="form-input" onchange="analyzeBeduerfnis()">
+                                <option value="">Alle Vorgänge</option>
+                                <option value="VO">Vortel</option>
+                                <option value="TR">Training</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label class="form-label">🔫 Spezifische Waffe (optional)</label>
+                        <select id="beduerfnis-weapon" class="form-input" onchange="analyzeBeduerfnis()">
+                            <option value="">Alle Waffen</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="analyzeBeduerfnis()" style="width: 100%;">🔍 Analyse starten</button>
+                </div>
+                
+                <!-- Loading -->
+                <div id="beduerfnis-loading" class="loading" style="display: none;">Analyse läuft...</div>
+                
+                <!-- Results -->
+                <div id="beduerfnis-results" style="display: none;">
+                    <!-- Kurzwaffe Section -->
+                    <div id="kurzwaffe-section" style="margin-bottom: 20px;">
+                        <h3 style="color: #2196F3; margin-bottom: 15px; text-align: center;">🔫 Kurzwaffe</h3>
+                        <div id="kurzwaffe-content"></div>
+                    </div>
+                    
+                    <!-- Langwaffe Section -->
+                    <div id="langwaffe-section">
+                        <h3 style="color: #FF9800; margin-bottom: 15px; text-align: center;">🔫 Langwaffe</h3>
+                        <div id="langwaffe-content"></div>
                     </div>
                 </div>
             </div>
@@ -2369,6 +2424,11 @@
             if (page === 'stats') {
                 loadStatsFilters();
                 loadStats();
+            }
+            
+            // Load beduerfnis if beduerfnis page
+            if (page === 'beduerfnis') {
+                initBeduerfnisPage();
             }
         }
         
@@ -4439,6 +4499,278 @@
             
             // Focus first red input
             document.getElementById('red-1')?.focus();
+        }
+        
+        // ========== BEDÜRFNISNACHWEIS LOGIC ==========
+        
+        function initBeduerfnisPage() {
+            // Stichtag default: heute
+            document.getElementById('beduerfnis-stichtag').valueAsDate = new Date();
+            
+            // Waffen laden
+            loadBeduerfnisWeapons();
+            
+            // Automatisch analysieren
+            analyzeBeduerfnis();
+        }
+        
+        async function loadBeduerfnisWeapons() {
+            const { data: weapons, error } = await supabase
+                .from('weapons')
+                .select('id, manufacturer, model, waffenart')
+                .eq('user_id', currentUser.id)
+                .eq('archived', false)
+                .order('manufacturer', { ascending: true });
+            
+            if (error) {
+                console.error('Error loading weapons:', error);
+                return;
+            }
+            
+            const select = document.getElementById('beduerfnis-weapon');
+            select.innerHTML = '<option value="">Alle Waffen</option>';
+            
+            if (weapons) {
+                weapons.forEach(w => {
+                    const option = document.createElement('option');
+                    option.value = w.id;
+                    const waffenart = w.waffenart ? ` [${w.waffenart}]` : '';
+                    option.textContent = `${w.manufacturer} ${w.model}${waffenart}`;
+                    select.appendChild(option);
+                });
+            }
+        }
+        
+        async function analyzeBeduerfnis() {
+            const loading = document.getElementById('beduerfnis-loading');
+            const results = document.getElementById('beduerfnis-results');
+            
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            
+            const stichtag = document.getElementById('beduerfnis-stichtag').value;
+            const weaponId = document.getElementById('beduerfnis-weapon').value;
+            const sessionType = document.getElementById('beduerfnis-type').value;
+            
+            // Beide Analysen parallel ausführen
+            const promises = [
+                fetchBeduerfnisData(stichtag, 'Kurzwaffe', weaponId, sessionType),
+                fetchBeduerfnisData(stichtag, 'Langwaffe', weaponId, sessionType)
+            ];
+            
+            try {
+                const [kurzwaffeData, langwaffeData] = await Promise.all(promises);
+                
+                loading.style.display = 'none';
+                
+                // Kurzwaffe anzeigen
+                document.getElementById('kurzwaffe-content').innerHTML = generateWaffenartHTML(kurzwaffeData, 'Kurzwaffe');
+                
+                // Langwaffe anzeigen
+                document.getElementById('langwaffe-content').innerHTML = generateWaffenartHTML(langwaffeData, 'Langwaffe');
+                
+                results.style.display = 'block';
+            } catch (err) {
+                console.error('Error:', err);
+                loading.textContent = 'Fehler bei der Analyse';
+            }
+        }
+        
+        async function fetchBeduerfnisData(stichtagStr, waffenart, weaponId, sessionType) {
+            // Stichtag parsen
+            const stichtag = new Date(stichtagStr);
+            const startDate = new Date(stichtag);
+            startDate.setDate(startDate.getDate() - 730); // 24 Monate zurück
+            
+            // Query bauen
+            let query = supabase
+                .from('sessions')
+                .select(`
+                    id, date, session_type, weapon_id,
+                    weapons!sessions_weapon_id_fkey(waffenart)
+                `)
+                .eq('user_id', currentUser.id)
+                .gte('date', startDate.toISOString().split('T')[0])
+                .lte('date', stichtagStr);
+            
+            // Waffenart-Filter
+            if (waffenart) {
+                // Wir müssen nach der Waffenart filtern, aber die ist in der weapons Tabelle
+                // Daher holen wir erst alle Sessions und filtern dann client-seitig
+            }
+            
+            // Session-Type Filter
+            if (sessionType) {
+                query = query.eq('session_type', sessionType);
+            }
+            
+            const { data: sessions, error } = await query.order('date', { ascending: true });
+            
+            if (error) {
+                console.error('Error fetching sessions:', error);
+                throw error;
+            }
+            
+            // Client-seitige Filterung nach Waffenart und Waffe
+            let filteredSessions = sessions || [];
+            
+            // Nach Waffenart filtern
+            if (waffenart) {
+                filteredSessions = filteredSessions.filter(s => {
+                    const weaponWaffenart = s.weapons?.waffenart;
+                    return weaponWaffenart === waffenart;
+                });
+            }
+            
+            // Nach spezifischer Waffe filtern
+            if (weaponId) {
+                filteredSessions = filteredSessions.filter(s => s.weapon_id === weaponId);
+            }
+            
+            // Kriterium 1: Quartalsnachweis (1x pro Quartal)
+            const quartale = {};
+            filteredSessions.forEach(s => {
+                const date = new Date(s.date);
+                const year = date.getFullYear();
+                const quarter = Math.floor((date.getMonth()) / 3) + 1;
+                const quartalKey = `${year}-Q${quarter}`;
+                
+                if (!quartale[quartalKey]) {
+                    quartale[quartalKey] = { count: 0, sessions: [] };
+                }
+                quartale[quartalKey].count += 1;
+                quartale[quartalKey].sessions.push({
+                    id: s.id,
+                    date: s.date,
+                    type: s.session_type
+                });
+            });
+            
+            // Kriterium 2: 12-Monats-Blöcke
+            const block1End = new Date(stichtag);
+            block1End.setDate(block1End.getDate() - 365);
+            
+            const block1Start = new Date(startDate);
+            
+            const block2Start = new Date(block1End);
+            const block2End = new Date(stichtag);
+            
+            const block1Count = filteredSessions.filter(s => {
+                const date = new Date(s.date);
+                return date >= block1Start && date <= block1End;
+            }).length;
+            
+            const block2Count = filteredSessions.filter(s => {
+                const date = new Date(s.date);
+                return date >= block2Start && date <= block2End;
+            }).length;
+            
+            const kriterium1Erfuellt = Object.keys(quartale).length >= 8 && 
+                Object.values(quartale).every(q => q.count >= 1);
+            
+            return {
+                stichtag: stichtagStr,
+                zeitraum_start: startDate.toISOString().split('T')[0],
+                zeitraum_ende: stichtagStr,
+                kriterium1_quartale: quartale,
+                kriterium1_erfüllt: kriterium1Erfuellt,
+                kriterium2_block1: { count: block1Count, erfüllt: block1Count >= 6 },
+                kriterium2_block2: { count: block2Count, erfüllt: block2Count >= 6 },
+                gesamt_erfüllt: kriterium1Erfuellt && block1Count >= 6 && block2Count >= 6,
+                total_sessions: filteredSessions.length
+            };
+        }
+        
+        function generateWaffenartHTML(data, waffenartName) {
+            const color = waffenartName === 'Kurzwaffe' ? '#2196F3' : '#FF9800';
+            
+            // Quartale sortieren für Anzeige
+            const sortedQuartale = Object.entries(data.kriterium1_quartale)
+                .sort(([a], [b]) => a.localeCompare(b));
+            
+            // Quartale Grid - letzte 8 Quartale anzeigen
+            let quartaleHTML = '';
+            const targetQuarters = 8;
+            
+            // Wenn weniger als 8 Quartale vorhanden, fülle mit leeren
+            const displayQuartale = [];
+            
+            // Generiere die letzten 8 Quartale vom Stichtag rückwärts
+            const stichtag = new Date(data.stichtag);
+            for (let i = 0; i < targetQuarters; i++) {
+                const d = new Date(stichtag);
+                // Gehe i Quartale zurück
+                const monthsBack = i * 3;
+                d.setMonth(d.getMonth() - monthsBack);
+                const year = d.getFullYear();
+                const quarter = Math.floor(d.getMonth() / 3) + 1;
+                const key = `${year}-Q${quarter}`;
+                
+                const qData = data.kriterium1_quartale[key] || { count: 0, sessions: [] };
+                const isOk = qData.count >= 1;
+                
+                quartaleHTML += `
+                    <div class="quartal-item ${isOk ? 'ok' : 'nok'}">
+                        <div class="quartal-name">${key}</div>
+                        <div class="quartal-count" style="color: ${isOk ? '#4CAF50' : '#f44336'}">
+                            ${qData.count}×
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Kriterium 1 Status
+            const kriterium1Status = data.kriterium1_erfüllt 
+                ? '<span style="color: #4CAF50;">✅ Erfüllt</span>'
+                : '<span style="color: #f44336;">❌ Nicht erfüllt</span>';
+            
+            // Blöcke
+            const block1Class = data.kriterium2_block1.erfüllt ? 'ok' : 'nok';
+            const block2Class = data.kriterium2_block2.erfüllt ? 'ok' : 'nok';
+            
+            // Gesamtstatus
+            const gesamtClass = data.gesamt_erfüllt ? 'status-ok' : 'status-nok';
+            const gesamtText = data.gesamt_erfüllt ? '✅ Bedürfnis erfüllt' : '❌ Bedürfnis nicht erfüllt';
+            
+            return `
+                <!-- Gesamtstatus -->
+                <div class="status-card" style="border-left: 4px solid ${color}; margin-bottom: 15px;">
+                    <div class="status-indicator ${gesamtClass}">${gesamtText}</div>
+                </div>
+                
+                <!-- Kriterium 1 -->
+                <div class="kriterium-card" style="margin-bottom: 15px;">
+                    <div class="kriterium-title" style="color: ${color}; font-size: 1rem; margin-bottom: 10px;">
+                        <span>📊</span>
+                        <span>Kriterium 1: Quartalsnachweis (1× pro Quartal) - ${kriterium1Status}</span>
+                    </div>
+                    <div class="quartale-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">${quartaleHTML}</div>
+                </div>
+                
+                <!-- Kriterium 2 -->
+                <div class="kriterium-card">
+                    <div class="kriterium-title" style="color: ${color}; font-size: 1rem; margin-bottom: 10px;">
+                        <span>📅</span>
+                        <span>Kriterium 2: 12-Monats-Nachweis (6× pro Block)</span>
+                    </div>
+                    <div class="block-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                        <div class="block-item ${block1Class}" style="padding: 12px; border-radius: 8px; background: #1a1a2e; border: 2px solid ${data.kriterium2_block1.erfüllt ? '#4CAF50' : '#f44336'};">
+                            <div class="block-title" style="font-size: 0.85rem; color: #888; margin-bottom: 5px;">Block 1 (24-12 Monate)</div>
+                            <div class="block-count" style="font-size: 1.3rem; font-weight: 600; color: ${data.kriterium2_block1.erfüllt ? '#4CAF50' : '#f44336'};">
+                                ${data.kriterium2_block1.count} / 6
+                            </div>
+                            <div class="block-status" style="font-size: 0.8rem;">${data.kriterium2_block1.erfüllt ? '✅ Erfüllt' : '❌ Nicht erfüllt'}</div>
+                        </div>
+                        <div class="block-item ${block2Class}" style="padding: 12px; border-radius: 8px; background: #1a1a2e; border: 2px solid ${data.kriterium2_block2.erfüllt ? '#4CAF50' : '#f44336'};">
+                            <div class="block-title" style="font-size: 0.85rem; color: #888; margin-bottom: 5px;">Block 2 (12-0 Monate)</div>
+                            <div class="block-count" style="font-size: 1.3rem; font-weight: 600; color: ${data.kriterium2_block2.erfüllt ? '#4CAF50' : '#f44336'};">
+                                ${data.kriterium2_block2.count} / 6
+                            </div>
+                            <div class="block-status" style="font-size: 0.8rem;">${data.kriterium2_block2.erfüllt ? '✅ Erfüllt' : '❌ Nicht erfüllt'}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
     </script>
 </body>
