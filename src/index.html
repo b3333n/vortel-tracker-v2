@@ -428,7 +428,7 @@
             const { data, error } = await supabase
                 .from('profiles')
                 .select('id')
-                .eq('user_id', currentUser.id)
+                .eq('id', currentUser.id)
                 .single();
             
             return !!data;
@@ -458,11 +458,12 @@
             const { error } = await supabase
                 .from('profiles')
                 .insert({
-                    user_id: currentUser.id,
-                    firstname: firstname,
-                    lastname: lastname,
-                    shooter_id: shooterId || null,
-                    club: club || null
+                    id: currentUser.id,
+                    first_name: firstname,
+                    last_name: lastname,
+                    email: currentUser.email,
+                    schuetzennummer: shooterId || null,
+                    club_name: club || null
                 });
             
             if (error) {
