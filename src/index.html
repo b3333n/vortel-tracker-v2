@@ -3509,9 +3509,9 @@
                     duellTotal = session.duell_totals[0].total;
                 }
                 
-                const weaponInfo = session.weapons ? `${session.weapons.manufacturer} ${session.weapons.model}` : '';
+                const weaponInfo = session.weapons ? `${session.weapons.manufacturer || ''} ${session.weapons.model || ''}`.trim() : '';
                 const weaponType = session.weapons?.waffenart || '';
-                const ammoInfo = session.ammunition ? `${session.ammunition.manufacturer} ${session.ammunition.caliber}` : '';
+                const ammoInfo = session.ammunition ? `${session.ammunition.manufacturer || ''} ${session.ammunition.caliber || ''}`.trim() : '';
                 
                 const values = {
                     nachname: profileData.nachname !== '-' ? profileData.nachname : '',
@@ -3834,6 +3834,8 @@
                         session_type,
                         weapon_id,
                         ammunition_id,
+                        location,
+                        notes,
                         results (
                             target_type,
                             value
@@ -3841,7 +3843,8 @@
                         duell_totals (
                             total
                         ),
-                        weapons (manufacturer, model)
+                        weapons (manufacturer, model, waffenart),
+                        ammunition (manufacturer, caliber)
                     `)
                     .eq('user_id', currentUser.id)
                     .order('date', { ascending: false })
@@ -3915,7 +3918,7 @@
                     const rowNum = tbody.children.length + 1;
                     
                     // Weapon info
-                    const weaponInfo = session.weapons ? `${session.weapons.manufacturer} ${session.weapons.model}` : '-';
+                    const weaponInfo = session.weapons ? `${session.weapons.manufacturer || ''} ${session.weapons.model || ''}`.trim() || '-' : '-';
                     
                     row.innerHTML = `
                         <td class="date-cell">${dateStr}</td>
