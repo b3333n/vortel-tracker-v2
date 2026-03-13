@@ -588,6 +588,23 @@
             margin-bottom: 20px;
         }
         
+        /* Mobile: Keep side by side even on small screens */
+        @media (max-width: 400px) {
+            .summary-cards {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            .summary-card {
+                padding: 15px 10px;
+            }
+            .summary-card .summary-value {
+                font-size: 1.5rem;
+            }
+            .summary-card .summary-label {
+                font-size: 0.75rem;
+            }
+        }
+        
         .summary-card {
             background: #2d2d44;
             border-radius: 12px;
@@ -638,6 +655,29 @@
         .year-detail {
             font-size: 0.85rem;
             color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .year-type {
+            font-size: 0.8rem;
+            color: #aaa;
+            font-weight: 500;
+        }
+        
+        /* Mobile: Keep year boxes side by side */
+        @media (max-width: 400px) {
+            .year-compare {
+                gap: 10px;
+            }
+            .year-box {
+                padding: 15px 10px;
+            }
+            .year-value {
+                font-size: 2rem;
+            }
+            .year-label, .year-detail, .year-type {
+                font-size: 0.75rem;
+            }
         }
         
         .stats-grid {
@@ -1441,31 +1481,21 @@
                 
                 <!-- Stats Content -->
                 <div id="stats-content" style="display: none;">
-                    <!-- Summary Cards -->
-                    <div class="summary-cards">
-                        <div class="summary-card">
-                            <div class="summary-value" id="stats-count">0</div>
-                            <div class="summary-label">Sessions</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-value" id="stats-l12m">0</div>
-                            <div class="summary-label">Letzte 12 Monate</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Year Comparison -->
+                    <!-- Year Comparison - Vorjahr links, aktuelles Jahr rechts -->
                     <div class="card" id="year-compare-card">
-                        <div class="card-title">📅 Jahresvergleich (Top 10 Ø)</div>
+                        <div class="card-title">📅 Jahresvergleich (Ø Top 10 Wertungen)</div>
                         <div class="year-compare">
-                            <div class="year-box">
-                                <div class="year-label" id="current-year-label">2026</div>
-                                <div class="year-value" id="current-year-avg">-</div>
-                                <div class="year-detail" id="current-year-detail">- Wertungen</div>
-                            </div>
                             <div class="year-box">
                                 <div class="year-label" id="prev-year-label">2025</div>
                                 <div class="year-value" id="prev-year-avg">-</div>
                                 <div class="year-detail" id="prev-year-detail">- Wertungen</div>
+                                <div class="year-type" id="prev-year-type">🟢 Grün + ⚔️ Duell</div>
+                            </div>
+                            <div class="year-box">
+                                <div class="year-label" id="current-year-label">2026</div>
+                                <div class="year-value" id="current-year-avg">-</div>
+                                <div class="year-detail" id="current-year-detail">- Wertungen</div>
+                                <div class="year-type" id="current-year-type">🟢 Grün + ⚔️ Duell</div>
                             </div>
                         </div>
                     </div>
@@ -1483,6 +1513,18 @@
                         <div class="chart-card" id="gauge-duell-card">
                             <div class="chart-title duell-title">⚔️ Duell Ø</div>
                             <div class="gauge-wrapper" id="gauge-duell"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Vortel Count Cards - nebeneinander -->
+                    <div class="summary-cards">
+                        <div class="summary-card">
+                            <div class="summary-value" id="stats-count">0</div>
+                            <div class="summary-label">Vortel im Zeitraum</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-value" id="stats-l12m">0</div>
+                            <div class="summary-label">Vortel L12M</div>
                         </div>
                     </div>
                     
@@ -2139,6 +2181,12 @@
             
             document.getElementById('current-year-label').textContent = currentYear;
             document.getElementById('prev-year-label').textContent = prevYear;
+            
+            const config = DISCIPLINE_CONFIG[statsDiscipline];
+            const yearTypeLabel = config.hasDuell ? '🟢 Grün + ⚔️ Duell' : '🟢 Grün + 🔴 Rot';
+            
+            document.getElementById('current-year-type').textContent = yearTypeLabel;
+            document.getElementById('prev-year-type').textContent = yearTypeLabel;
             
             if (currentStats) {
                 document.getElementById('current-year-avg').textContent = currentStats.avg;
