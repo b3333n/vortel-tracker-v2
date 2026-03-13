@@ -1631,7 +1631,8 @@
                         )
                     `)
                     .eq('user_id', currentUser.id)
-                    .order('date', { ascending: false });
+                    .order('date', { ascending: false })
+                    .order('created_at', { ascending: false });
                 
                 // Apply filters
                 const disciplineFilter = document.getElementById('filter-discipline')?.value;
