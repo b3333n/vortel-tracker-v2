@@ -1272,7 +1272,7 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <div class="logo">
+            <div class="logo" onclick="showPage('input')" style="cursor: pointer;" title="Zur Eingabe">
                 <svg class="logo-icon" viewBox="0 0 100 100">
                     <circle cx="50" cy="50" r="48" fill="#1a1a2e" stroke="#4CAF50" stroke-width="2"/>
                     <circle cx="50" cy="50" r="36" fill="none" stroke="#f44336" stroke-width="3"/>
@@ -1280,7 +1280,7 @@
                     <circle cx="50" cy="50" r="12" fill="none" stroke="#fff" stroke-width="2"/>
                     <circle cx="50" cy="50" r="4" fill="#fff"/>
                 </svg>
-                Vortel Tracker V2
+                Vortel Tracker
             </div>
             <div class="user-menu" id="user-menu" style="display: none;">
                 <button class="menu-btn" onclick="toggleMenu()">
@@ -1954,6 +1954,9 @@
                                 </label>
                                 <label class="checkbox-label">
                                     <input type="checkbox" class="export-checkbox" value="waffe"> Waffe
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="export-checkbox" value="waffenart"> Waffenart
                                 </label>
                                 <label class="checkbox-label">
                                     <input type="checkbox" class="export-checkbox" value="munition"> Munition
@@ -3477,6 +3480,7 @@
                 disziplin: 'Disziplin',
                 typ: 'Typ',
                 waffe: 'Waffe',
+                waffenart: 'Waffenart',
                 munition: 'Munition',
                 stand: 'Schießstand',
                 rot: 'Rot',
@@ -3506,6 +3510,7 @@
                 }
                 
                 const weaponInfo = session.weapons ? `${session.weapons.manufacturer} ${session.weapons.model}` : '';
+                const weaponType = session.weapons?.waffenart || '';
                 const ammoInfo = session.ammunition ? `${session.ammunition.manufacturer} ${session.ammunition.caliber}` : '';
                 
                 const values = {
@@ -3518,6 +3523,7 @@
                     disziplin: session.discipline,
                     typ: session.session_type,
                     waffe: weaponInfo,
+                    waffenart: weaponType,
                     munition: ammoInfo,
                     stand: session.location || '',
                     rot: session.session_type === 'TR' ? '' : redTotal,
