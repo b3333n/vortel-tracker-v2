@@ -2516,7 +2516,7 @@
             weaponSelect.innerHTML = '<option value="">Alle Waffen</option>';
             if (weapons) {
                 weapons.forEach(w => {
-                    weaponSelect.innerHTML += `<option value="${w.id}">${w.manufacturer} ${w.model}${w.is_loan ? ' 🇩🇪' : ''}</option>`;
+                    weaponSelect.innerHTML += `<option value="${w.id}">${w.manufacturer} ${w.model}${w.is_loan ? ' [LEIH]' : ''}</option>`;
                 });
             }
             
@@ -3902,7 +3902,7 @@
                 weaponSelect.innerHTML = '<option value="">Alle Waffen</option>';
                 if (weapons) {
                     weapons.forEach(w => {
-                        weaponSelect.innerHTML += `<option value="${w.id}">${w.manufacturer} ${w.model}${w.is_loan ? ' 🇩🇪' : ''}</option>`;
+                        weaponSelect.innerHTML += `<option value="${w.id}">${w.manufacturer} ${w.model}${w.is_loan ? ' [LEIH]' : ''}</option>`;
                     });
                 }
             }
