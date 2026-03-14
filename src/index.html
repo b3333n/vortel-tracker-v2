@@ -577,7 +577,7 @@
         
         /* Inline Edit Form */
         .inline-edit-form {
-            animation: slideDown 0.3s ease;
+            animation: fadeIn 0.2s ease;
         }
         
         /* Modal */
@@ -1318,7 +1318,7 @@
                         👤 Profil
                     </div>
                     <div class="menu-item" onclick="showPage('support')">
-                        💚 Projekt unterstützen
+                        💚 Unterstützen
                     </div>
                     <div class="menu-item" onclick="logout()">
                         🚪 Logout
@@ -1802,7 +1802,7 @@
                     <div class="form-row beduerfnis-controls" style="margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div class="form-group" style="min-width: 0;">
                             <label class="form-label">📅 Stichtag</label>
-                            <input type="date" id="beduerfnis-stichtag" class="form-input" style="width: 100%; max-width: 100%;">
+                            <input type="date" id="beduerfnis-stichtag" class="form-input" style="width: 100%; max-width: 160px;">
                         </div>
                         <div class="form-group" style="min-width: 0;">
                             <label class="form-label">📋 Typ</label>
@@ -2072,7 +2072,7 @@
                     <input type="hidden" id="edit-session-id">
                     <div class="form-group">
                         <label class="form-label">📅 Datum</label>
-                        <input type="date" id="edit-date" class="form-input">
+                        <input type="date" id="edit-date" class="form-input" style="max-width: 160px;">
                     </div>
                     <div class="form-group">
                         <label class="form-label">🔫 Waffe</label>
@@ -2508,7 +2508,7 @@
             // Load weapons for filter
             const { data: weapons } = await supabase
                 .from('weapons')
-                .select('id, manufacturer, model')
+                .select('id, manufacturer, model, is_loan')
                 .eq('user_id', currentUser.id)
                 .eq('archived', false);
             
@@ -2516,7 +2516,7 @@
             weaponSelect.innerHTML = '<option value="">Alle Waffen</option>';
             if (weapons) {
                 weapons.forEach(w => {
-                    weaponSelect.innerHTML += `<option value="${w.id}">${w.manufacturer} ${w.model}</option>`;
+                    weaponSelect.innerHTML += `<option value="${w.id}">${w.manufacturer} ${w.model}${w.is_loan ? ' 🇩🇪' : ''}</option>`;
                 });
             }
             
@@ -3892,7 +3892,7 @@
             // Load weapons for filter
             const { data: weapons } = await supabase
                 .from('weapons')
-                .select('id, manufacturer, model')
+                .select('id, manufacturer, model, is_loan')
                 .eq('user_id', currentUser.id)
                 .eq('archived', false)
                 .order('manufacturer', { ascending: true });
@@ -3902,7 +3902,7 @@
                 weaponSelect.innerHTML = '<option value="">Alle Waffen</option>';
                 if (weapons) {
                     weapons.forEach(w => {
-                        weaponSelect.innerHTML += `<option value="${w.id}">${w.manufacturer} ${w.model}</option>`;
+                        weaponSelect.innerHTML += `<option value="${w.id}">${w.manufacturer} ${w.model}${w.is_loan ? ' 🇩🇪' : ''}</option>`;
                     });
                 }
             }
@@ -3972,8 +3972,8 @@
                         ammunition (manufacturer, caliber)
                     `)
                     .eq('user_id', currentUser.id)
-                    .order('date', { ascending: false })
-                    .order('created_at', { ascending: false });
+                    .order('date', { ascending: true })
+                    .order('created_at', { ascending: true });
                 
                 // Apply filters
                 const disciplineFilter = document.getElementById('filter-discipline')?.value;
@@ -4039,8 +4039,8 @@
                     // Determine if VL (no duell)
                     const isVL = session.discipline === 'VL';
                     
-                    // Row number (index + 1)
-                    const rowNum = tbody.children.length + 1;
+                    // Row number (index + 1) - aufsteigend, älteste = 1
+                    const rowNum = index + 1;
                     
                     // Weapon info
                     const weaponInfo = session.weapons ? `${session.weapons.manufacturer || ''} ${session.weapons.model || ''}`.trim() || '-' : '-';
