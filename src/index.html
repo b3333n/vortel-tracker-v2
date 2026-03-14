@@ -3972,8 +3972,8 @@
                         ammunition (manufacturer, caliber)
                     `)
                     .eq('user_id', currentUser.id)
-                    .order('date', { ascending: true })
-                    .order('created_at', { ascending: true });
+                    .order('date', { ascending: false })
+                    .order('created_at', { ascending: false });
                 
                 // Apply filters
                 const disciplineFilter = document.getElementById('filter-discipline')?.value;
@@ -4039,8 +4039,8 @@
                     // Determine if VL (no duell)
                     const isVL = session.discipline === 'VL';
                     
-                    // Row number (index + 1) - aufsteigend, älteste = 1
-                    const rowNum = index + 1;
+                    // Row number - aufsteigend von unten (älteste = 1, neueste = n)
+                    const rowNum = sessions.length - index;
                     
                     // Weapon info
                     const weaponInfo = session.weapons ? `${session.weapons.manufacturer || ''} ${session.weapons.model || ''}`.trim() || '-' : '-';
