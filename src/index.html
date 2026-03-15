@@ -1392,6 +1392,11 @@
                 <div id="login-info" style="margin-top: 20px; color: #888; font-size: 0.9rem;">
                     Du erhältst einen Login-Link per E-Mail. Kein Passwort nötig!
                 </div>
+                
+                <!-- Datenschutz Hinweis -->
+                <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #3d3d54; font-size: 0.8rem; color: #666;">
+                    Mit der Anmeldung akzeptierst du unsere <a href="#" onclick="showPage('datenschutz'); return false;" style="color: #4CAF50;">Datenschutzerklärung</a>.
+                </div>
             </div>
         </div>
 
@@ -2309,6 +2314,102 @@
             <div style="text-align: center; color: #666; font-size: 0.85rem; margin-top: 30px; padding: 20px; border-top: 1px solid #3d3d54;">
                 <p>Vielen Dank für deine Unterstützung! <span style="color: #f44336;">❤️</span></p>
             </div>
+        </div>
+
+        <!-- Impressum Page -->
+        <div id="page-impressum" class="page" style="display: none;">
+            <div class="card">
+                <div class="card-title">📋 Impressum</div>
+                
+                <div style="color: #aaa; line-height: 1.8;">
+                    <h3 style="color: #4CAF50; margin: 20px 0 10px;">Angaben gemäß § 5 TMG</h3>
+                    <p>
+                        <strong style="color: #eee;">Benedikt Popp</strong><br>
+                        Esmarchstr. 15<br>
+                        80999 München
+                    </p>
+                    
+                    <h3 style="color: #4CAF50; margin: 20px 0 10px;">Kontakt</h3>
+                    <p>
+                        E-Mail: <a href="mailto:bponlinemarketing@gmail.com" style="color: #4CAF50;">bponlinemarketing@gmail.com</a>
+                    </p>
+                    
+                    <h3 style="color: #4CAF50; margin: 20px 0 10px;">Verantwortlich für den Inhalt</h3>
+                    <p>
+                        Benedikt Popp<br>
+                        Esmarchstr. 15<br>
+                        80999 München
+                    </p>
+                    
+                    <h3 style="color: #4CAF50; margin: 20px 0 10px;">Haftung für Inhalte</h3>
+                    <p style="font-size: 0.95rem;">
+                        Als Diensteanbieter sind wir gemäß § 7 Abs.1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 TMG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen.
+                    </p>
+                </div>
+                
+                <button class="btn btn-secondary" onclick="showPage('input')" style="margin-top: 20px; width: 100%;">← Zurück</button>
+            </div>
+        </div>
+
+        <!-- Datenschutz Page -->
+        <div id="page-datenschutz" class="page" style="display: none;">
+            <div class="card">
+                <div class="card-title">🔒 Datenschutzerklärung</div>
+                
+                <div style="color: #aaa; line-height: 1.8; font-size: 0.95rem;">
+                    <h3 style="color: #4CAF50; margin: 20px 0 10px;">1. Datenschutz auf einen Blick</h3>
+                    <p style="margin-bottom: 15px;">
+                        <strong style="color: #eee;">Allgemeine Hinweise</strong><br>
+                        Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit deinen personenbezogenen Daten passiert, wenn du diese Website besuchst.
+                    </p>
+                    
+                    <h3 style="color: #4CAF50; margin: 20px 0 10px;">2. Verantwortliche Stelle</h3>
+                    <p>
+                        Benedikt Popp<br>
+                        Esmarchstr. 15<br>
+                        80999 München<br>
+                        E-Mail: <a href="mailto:bponlinemarketing@gmail.com" style="color: #4CAF50;">bponlinemarketing@gmail.com</a>
+                    </p>
+                    
+                    <h3 style="color: #4CAF50; margin: 20px 0 10px;">3. Welche Daten werden erhoben?</h3>
+                    <ul style="margin-left: 20px; margin-bottom: 15px;">
+                        <li>E-Mail-Adresse (für Login/Authentifizierung)</li>
+                        <li>Name, Schützennummer, Verein (freiwillige Profilangaben)</li>
+                        <li>Schießergebnisse und Trainingsdaten</li>
+                    </ul>
+                    
+                    <h3 style="color: #4CAF50; margin: 20px 0 10px;">4. Zweck der Datenerhebung</h3>
+                    <p style="margin-bottom: 15px;">
+                        Die Daten werden ausschließlich zum Betrieb der Vortel-Tracking-Funktionen erhoben und gespeichert. Es erfolgt keine Weitergabe an Dritte.
+                    </p>
+                    
+                    <h3 style="color: #4CAF50; margin: 20px 0 10px;">5. Hosting</h3>
+                    <p style="margin-bottom: 15px;">
+                        Die Daten werden auf Supabase-Servern in Frankfurt (Deutschland/EU) gespeichert.
+                    </p>
+                    
+                    <h3 style="color: #4CAF50; margin: 20px 0 10px;">6. Deine Rechte</h3>
+                    <p style="margin-bottom: 15px;">
+                        Du hast das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung deiner Daten. Kontaktiere mich dazu einfach per E-Mail.
+                    </p>
+                    
+                    <h3 style="color: #4CAF50; margin: 20px 0 10px;">7. Löschung deiner Daten</h3>
+                    <p>
+                        Möchtest du deinen Account und alle damit verbundenen Daten löschen? Schicke mir einfach eine E-Mail an <a href="mailto:bponlinemarketing@gmail.com" style="color: #4CAF50;">bponlinemarketing@gmail.com</a> – ich erledige das umgehend.
+                    </p>
+                </div>
+                
+                <button class="btn btn-secondary" onclick="showPage('input')" style="margin-top: 20px; width: 100%;">← Zurück</button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer" style="text-align: center; padding: 20px; color: #666; font-size: 0.85rem; border-top: 1px solid #3d3d54; margin-top: 30px;">
+            <a href="#" onclick="showPage('impressum'); return false;" style="color: #888; text-decoration: none; margin: 0 10px;">Impressum</a>
+            <span style="color: #555;">|</span>
+            <a href="#" onclick="showPage('datenschutz'); return false;" style="color: #888; text-decoration: none; margin: 0 10px;">Datenschutz</a>
+            <span style="color: #555;">|</span>
+            <span style="color: #666; margin: 0 10px;">© Benedikt Popp 2026</span>
         </div>
     </div>
 
