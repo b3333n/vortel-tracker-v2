@@ -4149,6 +4149,9 @@
             document.getElementById('session-date').valueAsDate = new Date();
             createInputGrids();
             loadEquipmentDropdowns();
+            
+            // Restore saved input after a short delay
+            setTimeout(restoreInputFromStorage, 300);
         }
         
         // Disziplin wechseln
@@ -4589,6 +4592,9 @@
         
         // Reset form after save
         function resetForm() {
+            // Clear localStorage
+            clearInputStorage();
+            
             // Reset date to today
             document.getElementById('session-date').valueAsDate = new Date();
             
@@ -4611,6 +4617,149 @@
             // Focus first red input
             document.getElementById('red-1')?.focus();
         }
+        
+        // ========== LOCALSTORAGE AUTO-SAVE ==========
+        
+        // Save all input values to localStorage
+        function saveInputToStorage() {
+            const data = {
+                date: document.getElementById('session-date')?.value,
+                discipline: currentDiscipline,
+                sessionType: currentSessionType,
+                weapon: document.getElementById('session-weapon')?.value,
+                ammunition: document.getElementById('session-ammunition')?.value,
+                duellMode: duellMode,
+                notes: document.getElementById('session-notes')?.value,
+                trainingNotes: document.getElementById('training-notes')?.value,
+                timestamp: Date.now()
+            };
+            
+            // Save all shot inputs
+            document.querySelectorAll('.shot-input').forEach(input => {
+                if (input.value) {
+                    data[input.id] = input.value;
+                }
+            });
+            
+            // Save duell total if in total mode
+            const duellTotal = document.getElementById('duell-total-input')?.value;
+            if (duellTotal) {
+                data['duell-total'] = duellTotal;
+            }
+            
+            localStorage.setItem('vortel_session_input', JSON.stringify(data));
+        }
+        
+        // Restore input values from localStorage
+        function restoreInputFromStorage() {
+            const saved = localStorage.getItem('vortel_session_input');
+            if (!saved) return;
+            
+            try {
+                const data = JSON.parse(saved);
+                
+                // Check if data is not too old (older than 24 hours)
+                if (data.timestamp && (Date.now() - data.timestamp) > 24 * 60 * 60 * 1000) {
+                    localStorage.removeItem('vortel_session_input');
+                    return;
+                }
+                
+                // Restore discipline
+                if (data.discipline && DISCIPLINE_CONFIG[data.discipline]) {
+                    setDiscipline(data.discipline);
+                }
+                
+                // Restore session type
+                if (data.sessionType) {
+                    currentSessionType = data.sessionType;
+                    document.getElementById('session-type-toggle').checked = (data.sessionType === 'TR');
+                    updateSessionTypeUI();
+                }
+                
+                // Restore date (only if not older than today)
+                if (data.date) {
+                    document.getElementById('session-date').value = data.date;
+                }
+                
+                // Restore weapon and ammo
+                if (data.weapon) {
+                    document.getElementById('session-weapon').value = data.weapon;
+                }
+                if (data.ammunition) {
+                    document.getElementById('session-ammunition').value = data.ammunition;
+                }
+                
+                // Restore duell mode
+                if (data.duellMode) {
+                    duellMode = data.duellMode;
+                    setDuellMode(duellMode);
+                }
+                
+                // Restore notes
+                if (data.notes) {
+                    document.getElementById('session-notes').value = data.notes;
+                }
+                if (data.trainingNotes) {
+                    document.getElementById('training-notes').value = data.trainingNotes;
+                }
+                
+                // Restore shot inputs after a short delay (to ensure grids are created)
+                setTimeout(() => {
+                    Object.keys(data).forEach(key => {
+                        if (key.startsWith('red-') || key.startsWith('green-') || key.startsWith('black-') || key.startsWith('duell-')) {
+                            const input = document.getElementById(key);
+                            if (input) {
+                                input.value = data[key];
+                                input.style.borderColor = '#4CAF50';
+                            }
+                        }
+                    });
+                    
+                    // Restore duell total
+                    if (data['duell-total']) {
+                        document.getElementById('duell-total-input').value = data['duell-total'];
+                    }
+                    
+                    calculateSummary();
+                }, 100);
+                
+            } catch (e) {
+                console.error('Error restoring session input:', e);
+                localStorage.removeItem('vortel_session_input');
+            }
+        }
+        
+        // Clear saved input after successful save
+        function clearInputStorage() {
+            localStorage.removeItem('vortel_session_input');
+        }
+        
+        // Auto-save on input changes
+        document.addEventListener('input', (e) => {
+            if (e.target.classList.contains('shot-input') || 
+                e.target.id === 'session-notes' || 
+                e.target.id === 'training-notes' ||
+                e.target.id === 'duell-total-input') {
+                saveInputToStorage();
+            }
+        });
+        
+        // Auto-save on change (dropdowns, date, etc.)
+        document.addEventListener('change', (e) => {
+            if (e.target.id === 'session-weapon' || 
+                e.target.id === 'session-ammunition' ||
+                e.target.id === 'session-date') {
+                saveInputToStorage();
+            }
+        });
+        
+        // Save before page unload
+        window.addEventListener('beforeunload', saveInputToStorage);
+        
+        // Restore on page load (after auth check)
+        window.addEventListener('load', () => {
+            setTimeout(restoreInputFromStorage, 500);
+        });
         
         // ========== BEDÜRFNISNACHWEIS LOGIC ==========
         
