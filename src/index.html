@@ -1380,17 +1380,47 @@
             <!-- Login Form Card -->
             <div class="auth-form-card">
                 <div id="auth-message"></div>
-                <form id="login-form" class="auth-form">
-                    <div class="form-group">
-                        <label class="form-label">📧 E-Mail-Adresse</label>
-                        <input type="email" id="email" class="form-input" placeholder="deine@email.de" required>
+                
+                <!-- Phase 1: Email Eingabe -->
+                <div id="login-phase-1">
+                    <form id="login-form" class="auth-form">
+                        <div class="form-group">
+                            <label class="form-label">📧 E-Mail-Adresse</label>
+                            <input type="email" id="email" class="form-input" placeholder="deine@email.de" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 14px;">
+                            Code anfordern →
+                        </button>
+                    </form>
+                    <div id="login-info" style="margin-top: 20px; color: #888; font-size: 0.9rem;">
+                        Du erhältst einen 6-stelligen Code per E-Mail.
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 14px;">
-                        Magic Link senden →
+                </div>
+                
+                <!-- Phase 2: Code Eingabe (initial hidden) -->
+                <div id="login-phase-2" style="display: none;">
+                    <div class="form-group" style="text-align: center;">
+                        <label class="form-label">🔐 6-stelliger Code</label>
+                        <div class="otp-inputs" style="display: flex; gap: 8px; justify-content: center; margin: 15px 0;">
+                            <input type="text" id="otp-1" class="form-input otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" style="width: 45px; height: 55px; text-align: center; font-size: 1.5rem; padding: 0;">
+                            <input type="text" id="otp-2" class="form-input otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" style="width: 45px; height: 55px; text-align: center; font-size: 1.5rem; padding: 0;">
+                            <input type="text" id="otp-3" class="form-input otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" style="width: 45px; height: 55px; text-align: center; font-size: 1.5rem; padding: 0;">
+                            <input type="text" id="otp-4" class="form-input otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" style="width: 45px; height: 55px; text-align: center; font-size: 1.5rem; padding: 0;">
+                            <input type="text" id="otp-5" class="form-input otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" style="width: 45px; height: 55px; text-align: center; font-size: 1.5rem; padding: 0;">
+                            <input type="text" id="otp-6" class="form-input otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" style="width: 45px; height: 55px; text-align: center; font-size: 1.5rem; padding: 0;">
+                        </div>
+                    </div>
+                    <button type="button" id="verify-otp-btn" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 14px;">
+                        Einloggen →
                     </button>
-                </form>
-                <div id="login-info" style="margin-top: 20px; color: #888; font-size: 0.9rem;">
-                    Du erhältst einen Login-Link per E-Mail. Kein Passwort nötig!
+                    <div style="margin-top: 15px; text-align: center;">
+                        <button type="button" id="resend-code-btn" class="btn btn-secondary" style="font-size: 0.9rem; background: transparent; border: none; color: #888;" disabled>
+                            Code erneut senden (<span id="resend-timer">60</span>s)
+                        </button>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="#" id="back-to-email" style="color: #888; font-size: 0.9rem; text-decoration: none;">← Andere E-Mail verwenden</a>
+                    </div>
                 </div>
                 
                 <!-- Datenschutz Hinweis -->
@@ -3987,27 +4017,171 @@
             }
         });
         
-        // Login form handler
+        // OTP Login State
+        let currentLoginEmail = '';
+        let resendTimer = null;
+        let resendCountdown = 60;
+
+        // Login form handler - Phase 1: Request OTP
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const email = document.getElementById('email').value;
+            currentLoginEmail = document.getElementById('email').value;
             
-            showMessage('info', 'Sende Magic Link...');
+            showMessage('info', 'Sende Code...');
             
             const { error } = await supabase.auth.signInWithOtp({
-                email: email,
+                email: currentLoginEmail,
                 options: {
-                    emailRedirectTo: window.location.origin
+                    shouldCreateUser: true
                 }
             });
             
             if (error) {
                 showMessage('error', 'Fehler: ' + error.message);
             } else {
-                showMessage('success', '✅ Magic Link gesendet! Bitte E-Mail prüfen.');
-                loginForm.reset();
+                showMessage('success', '✅ Code gesendet! Bitte E-Mail prüfen.');
+                showLoginPhase(2);
+                startResendTimer();
+                setTimeout(() => document.getElementById('otp-1').focus(), 100);
             }
+        });
+
+        // Switch login phases
+        function showLoginPhase(phase) {
+            document.getElementById('login-phase-1').style.display = phase === 1 ? 'block' : 'none';
+            document.getElementById('login-phase-2').style.display = phase === 2 ? 'block' : 'none';
+        }
+
+        // Start resend countdown
+        function startResendTimer() {
+            resendCountdown = 60;
+            const btn = document.getElementById('resend-code-btn');
+            const timerSpan = document.getElementById('resend-timer');
+            
+            btn.disabled = true;
+            timerSpan.textContent = resendCountdown;
+            
+            resendTimer = setInterval(() => {
+                resendCountdown--;
+                timerSpan.textContent = resendCountdown;
+                
+                if (resendCountdown <= 0) {
+                    clearInterval(resendTimer);
+                    btn.disabled = false;
+                    btn.innerHTML = 'Code erneut senden';
+                }
+            }, 1000);
+        }
+
+        // OTP Input Auto-Tab
+        document.querySelectorAll('.otp-digit').forEach((input, index, inputs) => {
+            input.addEventListener('input', (e) => {
+                const val = e.target.value;
+                
+                // Only allow numbers
+                if (!/^\d*$/.test(val)) {
+                    e.target.value = '';
+                    return;
+                }
+                
+                // Auto-tab to next
+                if (val && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+                
+                // Check if all filled
+                const allFilled = Array.from(inputs).every(inp => inp.value.length === 1);
+                if (allFilled) {
+                    document.getElementById('verify-otp-btn').focus();
+                }
+            });
+            
+            input.addEventListener('keydown', (e) => {
+                // Backspace to previous
+                if (e.key === 'Backspace' && !input.value && index > 0) {
+                    inputs[index - 1].focus();
+                }
+                
+                // Paste handling
+                if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
+                    return; // Let default paste happen
+                }
+            });
+            
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+                
+                pasted.split('').forEach((digit, i) => {
+                    if (inputs[i]) inputs[i].value = digit;
+                });
+                
+                if (pasted.length === 6) {
+                    document.getElementById('verify-otp-btn').focus();
+                } else if (inputs[pasted.length]) {
+                    inputs[pasted.length].focus();
+                }
+            });
+        });
+
+        // Verify OTP
+        document.getElementById('verify-otp-btn').addEventListener('click', async () => {
+            const digits = [];
+            for (let i = 1; i <= 6; i++) {
+                digits.push(document.getElementById(`otp-${i}`).value);
+            }
+            const token = digits.join('');
+            
+            if (token.length !== 6) {
+                showMessage('error', 'Bitte 6-stelligen Code eingeben');
+                return;
+            }
+            
+            showMessage('info', 'Überprüfe Code...');
+            
+            const { data, error } = await supabase.auth.verifyOtp({
+                email: currentLoginEmail,
+                token: token,
+                type: 'email'
+            });
+            
+            if (error) {
+                showMessage('error', 'Falscher Code. Bitte erneut versuchen.');
+                // Clear inputs
+                document.querySelectorAll('.otp-digit').forEach(inp => inp.value = '');
+                document.getElementById('otp-1').focus();
+            } else {
+                showMessage('success', '✅ Erfolgreich eingeloggt!');
+                clearInterval(resendTimer);
+            }
+        });
+
+        // Resend code
+        document.getElementById('resend-code-btn').addEventListener('click', async () => {
+            showMessage('info', 'Sende neuen Code...');
+            
+            const { error } = await supabase.auth.signInWithOtp({
+                email: currentLoginEmail,
+                options: { shouldCreateUser: true }
+            });
+            
+            if (error) {
+                showMessage('error', 'Fehler: ' + error.message);
+            } else {
+                showMessage('success', '✅ Neuer Code gesendet!');
+                startResendTimer();
+                document.querySelectorAll('.otp-digit').forEach(inp => inp.value = '');
+                document.getElementById('otp-1').focus();
+            }
+        });
+
+        // Back to email
+        document.getElementById('back-to-email').addEventListener('click', (e) => {
+            e.preventDefault();
+            clearInterval(resendTimer);
+            showLoginPhase(1);
+            document.getElementById('email').focus();
         });
         
         // Logout handler
