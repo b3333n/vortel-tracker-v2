@@ -1071,17 +1071,50 @@
         
         /* Auth Section */
         .auth-section {
-            background: #2d2d44;
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 20px;
+            max-width: 450px;
+            margin: 40px auto;
             text-align: center;
         }
-        
-        .auth-title {
-            font-size: 1.3rem;
-            margin-bottom: 20px;
+
+        .auth-header {
+            background: linear-gradient(180deg, #2d2d44 0%, #1a1a2e 100%);
+            border-radius: 16px 16px 0 0;
+            padding: 50px 30px 30px;
+            border-bottom: 2px solid #4CAF50;
+        }
+
+        .auth-logo {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            display: block;
+            filter: drop-shadow(0 4px 8px rgba(76, 175, 80, 0.3));
+        }
+
+        .auth-brand {
+            font-size: 2rem;
+            font-weight: 700;
             color: #4CAF50;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .auth-subtitle {
+            font-size: 0.95rem;
+            color: #aaa;
+            line-height: 1.5;
+        }
+
+        .auth-subtitle-icon {
+            font-size: 1.2rem;
+            margin-right: 6px;
+        }
+
+        .auth-form-card {
+            background: #2d2d44;
+            border-radius: 0 0 16px 16px;
+            padding: 35px 30px 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
         }
         
         .auth-form {
@@ -1329,17 +1362,39 @@
 
         <!-- Auth Section (shown when not logged in) -->
         <div id="auth-section" class="auth-section">
-            <div class="auth-title">🔐 Anmelden</div>
-            <div id="auth-message"></div>
-            <form id="login-form" class="auth-form">
-                <div class="form-group">
-                    <label class="form-label">E-Mail-Adresse</label>
-                    <input type="email" id="email" class="form-input" placeholder="deine@email.de" required>
+            <!-- Header with Logo & Branding -->
+            <div class="auth-header">
+                <svg class="auth-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="48" fill="#1a1a2e" stroke="#4CAF50" stroke-width="2"/>
+                    <circle cx="50" cy="50" r="36" fill="none" stroke="#f44336" stroke-width="3"/>
+                    <circle cx="50" cy="50" r="24" fill="none" stroke="#4CAF50" stroke-width="3"/>
+                    <circle cx="50" cy="50" r="12" fill="none" stroke="#fff" stroke-width="2"/>
+                    <circle cx="50" cy="50" r="4" fill="#fff"/>
+                </svg>
+
+                <div class="auth-brand">Vortel Tracker</div>
+
+                <div class="auth-subtitle">
+                    <span class="auth-subtitle-icon">🎯</span>
+                    Tracke deine Schießergebnisse & werte sie direkt aus
                 </div>
-                <button type="submit" class="btn btn-primary">📧 Magic Link senden</button>
-            </form>
-            <div id="login-info" style="margin-top: 20px; color: #888; font-size: 0.9rem;">
-                Du erhältst einen Login-Link per E-Mail. Kein Passwort nötig!
+            </div>
+
+            <!-- Login Form Card -->
+            <div class="auth-form-card">
+                <div id="auth-message"></div>
+                <form id="login-form" class="auth-form">
+                    <div class="form-group">
+                        <label class="form-label">📧 E-Mail-Adresse</label>
+                        <input type="email" id="email" class="form-input" placeholder="deine@email.de" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 14px;">
+                        Magic Link senden →
+                    </button>
+                </form>
+                <div id="login-info" style="margin-top: 20px; color: #888; font-size: 0.9rem;">
+                    Du erhältst einen Login-Link per E-Mail. Kein Passwort nötig!
+                </div>
             </div>
         </div>
 
@@ -4858,5 +4913,10 @@
             `;
         }
     </script>
+
+    <!-- Copyright Footer -->
+    <div style="position: fixed; bottom: 10px; right: 15px; font-size: 0.75rem; color: #666; z-index: 100;">
+        © Benedikt Popp 2026
+    </div>
 </body>
 </html>
