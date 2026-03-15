@@ -4620,42 +4620,65 @@
         
         // ========== LOCALSTORAGE AUTO-SAVE ==========
         
+        // Check if localStorage is available (works in all browsers, fails gracefully in private mode)
+        function isStorageAvailable() {
+            try {
+                const test = '__storage_test__';
+                localStorage.setItem(test, test);
+                localStorage.removeItem(test);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        
+        const storageAvailable = isStorageAvailable();
+        
         // Save all input values to localStorage
         function saveInputToStorage() {
-            const data = {
-                date: document.getElementById('session-date')?.value,
-                discipline: currentDiscipline,
-                sessionType: currentSessionType,
-                weapon: document.getElementById('session-weapon')?.value,
-                ammunition: document.getElementById('session-ammunition')?.value,
-                duellMode: duellMode,
-                notes: document.getElementById('session-notes')?.value,
-                trainingNotes: document.getElementById('training-notes')?.value,
-                timestamp: Date.now()
-            };
+            if (!storageAvailable) return;
             
-            // Save all shot inputs
-            document.querySelectorAll('.shot-input').forEach(input => {
-                if (input.value) {
-                    data[input.id] = input.value;
+            try {
+                const data = {
+                    date: document.getElementById('session-date')?.value,
+                    discipline: currentDiscipline,
+                    sessionType: currentSessionType,
+                    weapon: document.getElementById('session-weapon')?.value,
+                    ammunition: document.getElementById('session-ammunition')?.value,
+                    duellMode: duellMode,
+                    notes: document.getElementById('session-notes')?.value,
+                    trainingNotes: document.getElementById('training-notes')?.value,
+                    timestamp: Date.now()
+                };
+                
+                // Save all shot inputs
+                document.querySelectorAll('.shot-input').forEach(input => {
+                    if (input.value) {
+                        data[input.id] = input.value;
+                    }
+                });
+                
+                // Save duell total if in total mode
+                const duellTotal = document.getElementById('duell-total-input')?.value;
+                if (duellTotal) {
+                    data['duell-total'] = duellTotal;
                 }
-            });
-            
-            // Save duell total if in total mode
-            const duellTotal = document.getElementById('duell-total-input')?.value;
-            if (duellTotal) {
-                data['duell-total'] = duellTotal;
+                
+                localStorage.setItem('vortel_session_input', JSON.stringify(data));
+            } catch (e) {
+                // Silent fail - storage might be full or blocked
+                console.log('Auto-Save nicht verfügbar');
             }
-            
-            localStorage.setItem('vortel_session_input', JSON.stringify(data));
         }
         
         // Restore input values from localStorage
         function restoreInputFromStorage() {
-            const saved = localStorage.getItem('vortel_session_input');
-            if (!saved) return;
+            if (!storageAvailable) return;
             
             try {
+                const saved = localStorage.getItem('vortel_session_input');
+                if (!saved) return;
+                
                 const data = JSON.parse(saved);
                 
                 // Check if data is not too old (older than 24 hours)
@@ -4705,33 +4728,47 @@
                 
                 // Restore shot inputs after a short delay (to ensure grids are created)
                 setTimeout(() => {
-                    Object.keys(data).forEach(key => {
-                        if (key.startsWith('red-') || key.startsWith('green-') || key.startsWith('black-') || key.startsWith('duell-')) {
-                            const input = document.getElementById(key);
-                            if (input) {
-                                input.value = data[key];
-                                input.style.borderColor = '#4CAF50';
+                    try {
+                        Object.keys(data).forEach(key => {
+                            if (key.startsWith('red-') || key.startsWith('green-') || key.startsWith('black-') || key.startsWith('duell-')) {
+                                const input = document.getElementById(key);
+                                if (input) {
+                                    input.value = data[key];
+                                    input.style.borderColor = '#4CAF50';
+                                }
                             }
+                        });
+                        
+                        // Restore duell total
+                        if (data['duell-total']) {
+                            document.getElementById('duell-total-input').value = data['duell-total'];
                         }
-                    });
-                    
-                    // Restore duell total
-                    if (data['duell-total']) {
-                        document.getElementById('duell-total-input').value = data['duell-total'];
+                        
+                        calculateSummary();
+                    } catch (e) {
+                        console.error('Error restoring input values:', e);
                     }
-                    
-                    calculateSummary();
                 }, 100);
                 
             } catch (e) {
                 console.error('Error restoring session input:', e);
-                localStorage.removeItem('vortel_session_input');
+                try {
+                    localStorage.removeItem('vortel_session_input');
+                } catch (clearErr) {
+                    // Silent fail
+                }
             }
         }
         
         // Clear saved input after successful save
         function clearInputStorage() {
-            localStorage.removeItem('vortel_session_input');
+            if (!storageAvailable) return;
+            
+            try {
+                localStorage.removeItem('vortel_session_input');
+            } catch (e) {
+                // Silent fail
+            }
         }
         
         // Auto-save on input changes
