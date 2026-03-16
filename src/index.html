@@ -4622,22 +4622,26 @@
             let nextId = null;
             
             if (target === 'red') {
+                // Rot: 1 → 2 → 3 → 4 → 5 → grün-1
                 if (num < 5) nextId = `red-${num + 1}`;
-                else nextId = 'green-1'; // Erstes Feld der grünen Scheibe (links oben)
+                else nextId = 'green-1';
             } else if (target === 'green') {
-                if (num > 1) nextId = `green-${num - 1}`;
-                else nextId = 'black-1'; // Erstes Feld der schwarzen Scheibe (links oben)
+                // Grün: 1 → 2 → 3 → ... → max → schwarz-1
+                if (num < config.green) nextId = `green-${num + 1}`;
+                else nextId = 'black-1';
             } else if (target === 'black') {
-                if (num > 1) nextId = `black-${num - 1}`;
+                // Schwarz: 1 → 2 → 3 → ... → 10 → duell
+                if (num < 10) nextId = `black-${num + 1}`;
                 else {
                     if (duellMode === 'total') {
                         nextId = 'duell-total-input';
                     } else {
-                        nextId = 'duell-1'; // Erstes Feld der Duell-Scheibe
+                        nextId = 'duell-1';
                     }
                 }
             } else if (target === 'duell') {
-                if (num > 1) nextId = `duell-${num - 1}`;
+                // Duell: 1 → 2 → 3 → ... → max
+                if (num < config.duell) nextId = `duell-${num + 1}`;
             }
             
             if (nextId) {
