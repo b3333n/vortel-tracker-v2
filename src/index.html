@@ -3417,6 +3417,14 @@
             }
         }
         
+        // Cancel weapon edit - reset form
+        function cancelWeaponEdit() {
+            document.getElementById('weapon-form').reset();
+            document.getElementById('weapon-submit-btn').textContent = '💾 Hinzufügen';
+            document.getElementById('weapon-cancel-btn').style.display = 'none';
+            document.getElementById('weapon-form').dataset.editId = '';
+        }
+        
         // Save ammo (add or update)
         async function saveAmmo(event) {
             event.preventDefault();
@@ -3537,6 +3545,14 @@
             } catch (error) {
                 alert('Fehler: ' + error.message);
             }
+        }
+        
+        // Cancel ammo edit - reset form
+        function cancelAmmoEdit() {
+            document.getElementById('ammo-form').reset();
+            document.getElementById('ammo-submit-btn').textContent = '💾 Hinzufügen';
+            document.getElementById('ammo-cancel-btn').style.display = 'none';
+            document.getElementById('ammo-form').dataset.editId = '';
         }
         
         // Archive weapon
