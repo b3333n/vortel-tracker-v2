@@ -2487,7 +2487,7 @@
         // Check auth status on load
         async function checkAuth() {
             const { data: { session } } = await supabase.auth.getSession();
-            
+
             if (session) {
                 currentUser = session.user;
                 // Check if profile exists
@@ -2498,7 +2498,8 @@
                     showProfileModal();
                 }
             } else {
-                showAuthSection();
+                // Not logged in, redirect to login page
+                window.location.href = 'login.html';
             }
         }
         
@@ -2562,11 +2563,9 @@
             document.getElementById('profile-message').innerHTML = `<div class="message ${type}">${text}</div>`;
         }
         
-        // Show auth section
+        // Show auth section - redirect to login page
         function showAuthSection() {
-            authSection.style.display = 'block';
-            mainContent.classList.remove('active');
-            userMenu.style.display = 'none';
+            window.location.href = 'login.html';
         }
         
         // Show main content
@@ -4184,11 +4183,11 @@
             document.getElementById('email').focus();
         });
         
-        // Logout handler
+        // Logout handler - redirect to login page
         async function logout() {
             await supabase.auth.signOut();
             currentUser = null;
-            showAuthSection();
+            window.location.href = 'login.html';
         }
         
         // Show message
@@ -4205,7 +4204,7 @@
                 showMainContent();
             } else if (event === 'SIGNED_OUT') {
                 currentUser = null;
-                showAuthSection();
+                window.location.href = 'login.html';
             }
         });
         
