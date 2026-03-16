@@ -1,49 +1,37 @@
 # Vortel Tracker V2
 
-Digitales Wettkampf- und Trainings-Tagebuch für Sportschützen.
+Digitales Wettkampf- und Trainings-Tagebuch fuer Sportschuetzen.
 
 ## Features
 
-### 🎯 Kernfunktionen
+### Kernfunktionen
 - **Session-Eingabe** - Alle 3 Disziplinen (KK, GK, VL) mit Auto-Tab-Logik
 - **Historie** - Filterbare Liste aller Sessions mit CSV-Export
 - **Statistiken** - Gauges, Jahresvergleich, Verlaufs-Charts
+- **Beduerfnisnachweis** - Nachweis fuer Schusswaffen-Besitz nach WaffG
 - **Waffen & Munition** - Verwaltung mit Archiv-Funktion
-- **Profil** - Schützen-Daten (BSSB-Nr., Vereinsnummer, etc.)
+- **Profil** - Schuetzen-Daten (BSSB-Nr., Vereinsnummer, etc.)
 
-### 📊 Disziplinen
-- **KK** (Kleinkaliber): 5/15/10/15 (Rot/Grün/Schwarz/Duell)
-- **GK** (Großkaliber): 5/20/10/20
+### Disziplinen
+- **KK** (Kleinkaliber): 5/15/10/15 (Rot/Gruen/Schwarz/Duell)
+- **GK** (Grosskaliber): 5/20/10/20
 - **VL** (Vorderlader): 5/10/10 (kein Duell)
 
-### 🔐 Auth
-- Magic Link Login (keine Passwörter)
-- Supabase Auth
+### Technische Highlights
+- OTP-Login (6-stelliger Code per E-Mail)
+- Auto-Save bei der Eingabe (localStorage)
+- CSV-Export mit auswaehlbaren Spalten
+- Responsive Design fuer Mobile und Desktop
+- DSGVO-konform (Impressum, Datenschutzerklaerung)
 
 ## Tech Stack
 
-| Komponente | V1 | V2 |
-|------------|----|----|
-| **Frontend** | Flask + Jinja2 | Vanilla JS + Supabase Client |
-| **Backend** | Flask (Python) | Keiner (Serverless) |
-| **Datenbank** | SQLite (lokal) | PostgreSQL (Supabase) |
-| **Auth** | Selbstgebaut | Supabase Auth |
-| **Hosting** | VPS (eigener Server) | Railway + Supabase |
-| **Deployment** | Git + manuell | Git + automatisch |
-
-## Warum V2?
-
-### Vorteile V2 gegenüber V1
-1. **Kein Backend mehr** - Weniger Code, weniger Wartung
-2. **Echte Auth** - Sicherer, Magic Links
-3. **Cloud-Datenbank** - Keine Backups nötig, automatisch skalierbar
-4. **Moderner Stack** - Aktuelle Technologien, bessere Entwickler-Erfahrung
-5. **Mobile-First** - Von Anfang an responsive
-
-### Migration
-- Sessions: Via SQL-Export/Import
-- Waffen/Munition: Manuell neu anlegen
-- Profil: Neu ausfüllen
+- **Frontend**: Vanilla JavaScript + Supabase Client
+- **Backend**: Keiner (Serverless)
+- **Datenbank**: PostgreSQL (Supabase)
+- **Auth**: Supabase Auth (OTP)
+- **Hosting**: Railway + Supabase
+- **Deployment**: Git + automatisch
 
 ## Deployment
 
@@ -62,7 +50,7 @@ git push origin master
 # Automatisch: railway.app (production)
 ```
 
-## Umgebungsvariablen (Supabase)
+## Umgebungsvariablen (Railway)
 
 ```
 SUPABASE_URL=https://your-project.supabase.co
@@ -118,25 +106,12 @@ id SERIAL PRIMARY KEY
 user_id UUID REFERENCES auth.users(id)
 manufacturer TEXT
 model TEXT
-... (weitere Felder)
+caliber TEXT
+waffenart TEXT
+is_loan BOOLEAN DEFAULT false
+archived BOOLEAN DEFAULT false
 ```
-
-## Lessons Learned
-
-### Was gut funktioniert hat
-- Supabase als Backend-Alternative
-- Dev/Prod Workflow mit Railway
-- Mobile-First CSS
-
-### Was wir beim nächsten Mal anders machen würden
-- Direkt mit V2-Architektur starten (kein Flask-Rewrite)
-- Datenbank-Schema vorher komplett planen
-- Einen User für Migration testen, bevor alle migrieren
 
 ## License
 
 MIT
-
----
-
-Built with ❤️ for Sportschützen
