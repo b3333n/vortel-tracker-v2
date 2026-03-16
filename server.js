@@ -76,10 +76,11 @@ function serveHtml(res, content) {
     };
 </script>`;
     
-    // Replace the config.js script tag with inline config
-    content = content.replace('<script src="config.js"></script>', configScript);
-    content = content.replace('<script src="../config.js"></script>', configScript);
-    content = content.replace("<script src='config.js'></script>", configScript);
+    // Inject config BEFORE the Supabase client library
+    content = content.replace(
+        '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>',
+        configScript + '\n    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>'
+    );
     
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(content, 'utf8');
