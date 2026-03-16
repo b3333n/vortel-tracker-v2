@@ -73,6 +73,12 @@ web_modules/
 # Supabase config (injected at runtime)
 src/config.js
 
+# Migration files (one-time use)
+*.sql
+*.csv
+session_mapping.txt
+migration_workflow.md
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
