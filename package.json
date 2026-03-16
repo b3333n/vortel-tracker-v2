@@ -2,6 +2,6 @@
   "name": "vortel-tracker-v2",
   "version": "1.0.0",
   "scripts": {
-    "start": "npx http-server src/ -p $PORT"
+    "start": "node server.js"
   }
 }

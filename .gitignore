@@ -70,6 +70,9 @@ web_modules/
 .env.*
 !.env.example
 
+# Supabase config (injected at runtime)
+src/config.js
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
