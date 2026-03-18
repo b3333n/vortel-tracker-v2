@@ -2733,6 +2733,9 @@
         
         // Show specific page
         function showPage(page) {
+            // Scroll to top
+            window.scrollTo(0, 0);
+            
             // Hide all pages
             document.querySelectorAll('.page').forEach(p => {
                 p.style.display = 'none';
