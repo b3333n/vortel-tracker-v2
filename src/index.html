@@ -2443,6 +2443,69 @@
         </div>
     </div>
 
+    <!-- Edit Session Modal -->
+    <div id="edit-session-modal" class="modal-overlay" style="display: none;">
+        <div class="modal" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-title">✏️ Session bearbeiten</div>
+            <div id="edit-session-message"></div>
+            <form id="edit-session-form">
+                <input type="hidden" id="edit-session-id">
+                
+                <div class="form-group">
+                    <label class="form-label">📅 Datum</label>
+                    <input type="date" id="edit-session-date" class="form-input" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label">🎯 Disziplin</label>
+                        <select id="edit-session-discipline" class="form-input" required>
+                            <option value="KK">KK</option>
+                            <option value="GK">GK</option>
+                            <option value="VL">VL</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label">📋 Typ</label>
+                        <select id="edit-session-type" class="form-input" required>
+                            <option value="VO">Vortel</option>
+                            <option value="TR">Training</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">🔫 Waffe</label>
+                    <select id="edit-session-weapon" class="form-input">
+                        <option value="">Keine Waffe</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">💣 Munition</label>
+                    <select id="edit-session-ammo" class="form-input">
+                        <option value="">Keine Munition</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">📍 Ort</label>
+                    <input type="text" id="edit-session-location" class="form-input" placeholder="z.B. Schießstand München">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">📝 Notizen</label>
+                    <textarea id="edit-session-notes" class="form-input" rows="3" placeholder="Optional: Notizen zur Session..."></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">💾 Speichern</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditSessionModal()" style="flex: 1;">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
     
@@ -4415,6 +4478,143 @@
                 `;
             }
         }
+        
+        // ========== EDIT SESSION MODAL FUNCTIONS ==========
+        
+        // Open edit modal for a session
+        async function openEditModal(sessionId) {
+            const modal = document.getElementById('edit-session-modal');
+            const message = document.getElementById('edit-session-message');
+            message.innerHTML = '';
+            
+            try {
+                // Load session data
+                const { data: session, error } = await supabase
+                    .from('sessions')
+                    .select('*')
+                    .eq('id', sessionId)
+                    .eq('user_id', currentUser.id)
+                    .single();
+                
+                if (error) throw error;
+                if (!session) {
+                    alert('Session nicht gefunden');
+                    return;
+                }
+                
+                // Fill form
+                document.getElementById('edit-session-id').value = session.id;
+                document.getElementById('edit-session-date').value = session.date;
+                document.getElementById('edit-session-discipline').value = session.discipline;
+                document.getElementById('edit-session-type').value = session.session_type;
+                document.getElementById('edit-session-location').value = session.location || '';
+                document.getElementById('edit-session-notes').value = session.notes || '';
+                
+                // Load weapons and ammo dropdowns
+                await loadEditSessionDropdowns();
+                
+                // Set selected values
+                document.getElementById('edit-session-weapon').value = session.weapon_id || '';
+                document.getElementById('edit-session-ammo').value = session.ammunition_id || '';
+                
+                // Show modal
+                modal.style.display = 'flex';
+                
+            } catch (error) {
+                console.error('Error loading session:', error);
+                alert('Fehler beim Laden der Session: ' + error.message);
+            }
+        }
+        
+        // Load weapons and ammo dropdowns for edit modal
+        async function loadEditSessionDropdowns() {
+            // Load weapons
+            const { data: weapons } = await supabase
+                .from('weapons')
+                .select('id, manufacturer, model')
+                .eq('user_id', currentUser.id)
+                .eq('archived', false)
+                .order('manufacturer');
+            
+            const weaponSelect = document.getElementById('edit-session-weapon');
+            weaponSelect.innerHTML = '<option value="">Keine Waffe</option>';
+            if (weapons) {
+                weapons.forEach(w => {
+                    weaponSelect.innerHTML += `<option value="${w.id}">${w.manufacturer} ${w.model}</option>`;
+                });
+            }
+            
+            // Load ammo
+            const { data: ammo } = await supabase
+                .from('ammunition')
+                .select('id, manufacturer, caliber')
+                .eq('user_id', currentUser.id)
+                .eq('archived', false)
+                .order('manufacturer');
+            
+            const ammoSelect = document.getElementById('edit-session-ammo');
+            ammoSelect.innerHTML = '<option value="">Keine Munition</option>';
+            if (ammo) {
+                ammo.forEach(a => {
+                    ammoSelect.innerHTML += `<option value="${a.id}">${a.manufacturer} ${a.caliber}</option>`;
+                });
+            }
+        }
+        
+        // Close edit modal
+        function closeEditSessionModal() {
+            document.getElementById('edit-session-modal').style.display = 'none';
+            document.getElementById('edit-session-form').reset();
+        }
+        
+        // Save edited session
+        document.getElementById('edit-session-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const sessionId = document.getElementById('edit-session-id').value;
+            const message = document.getElementById('edit-session-message');
+            
+            try {
+                const { error } = await supabase
+                    .from('sessions')
+                    .update({
+                        date: document.getElementById('edit-session-date').value,
+                        discipline: document.getElementById('edit-session-discipline').value,
+                        session_type: document.getElementById('edit-session-type').value,
+                        weapon_id: document.getElementById('edit-session-weapon').value || null,
+                        ammunition_id: document.getElementById('edit-session-ammo').value || null,
+                        location: document.getElementById('edit-session-location').value || null,
+                        notes: document.getElementById('edit-session-notes').value || null
+                    })
+                    .eq('id', sessionId)
+                    .eq('user_id', currentUser.id);
+                
+                if (error) throw error;
+                
+                // Show success
+                message.innerHTML = '<div class="message success">✅ Session erfolgreich aktualisiert!</div>';
+                
+                // Close modal after short delay
+                setTimeout(() => {
+                    closeEditSessionModal();
+                    // Reload history if on history page
+                    if (document.getElementById('history-tbody')) {
+                        loadHistory();
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Error updating session:', error);
+                message.innerHTML = '<div class="message error">❌ Fehler: ' + error.message + '</div>';
+            }
+        });
+        
+        // Close modal when clicking outside
+        document.getElementById('edit-session-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'edit-session-modal') {
+                closeEditSessionModal();
+            }
+        });
         
         // ========== SESSION INPUT LOGIC ==========
         
