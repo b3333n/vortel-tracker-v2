@@ -4,7 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a1a2e">
-    <title>Vortel Tracker V2</title>
+    <title>Vortel Tracker</title>
+    
+    <!-- Open Graph Meta Tags for Social Sharing -->
+    <meta property="og:title" content="Vortel Tracker">
+    <meta property="og:description" content="Digitales Wettkampf- und Trainings-Tagebuch für Sportschützen">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Vortel Tracker">
+    
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%231a1a2e' stroke='%234CAF50' stroke-width='2'/%3E%3Ccircle cx='50' cy='50' r='36' fill='none' stroke='%23f44336' stroke-width='3'/%3E%3Ccircle cx='50' cy='50' r='24' fill='none' stroke='%234CAF50' stroke-width='3'/%3E%3Ccircle cx='50' cy='50' r='12' fill='none' stroke='%23fff' stroke-width='2'/%3E%3Ccircle cx='50' cy='50' r='4' fill='%23fff'/%3E%3C/svg%3E">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -312,6 +319,18 @@
         .shot-input:focus {
             border-color: #4CAF50;
             background: #252540;
+        }
+        
+        /* Desktop: Kleinere quadratische Inputs */
+        @media (min-width: 768px) {
+            .shots-grid {
+                max-width: 400px;
+                margin: 0 auto;
+            }
+            
+            .shot-input {
+                font-size: 1rem;
+            }
         }
         
         .target-total {
@@ -2443,6 +2462,115 @@
         </div>
     </div>
 
+    <!-- Edit Session Modal -->
+    <div id="edit-session-modal" class="modal-overlay" style="display: none;">
+        <div class="modal" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-title">✏️ Session bearbeiten</div>
+            <div id="edit-session-message"></div>
+            <form id="edit-session-form">
+                <input type="hidden" id="edit-session-id">
+                
+                <div class="form-group">
+                    <label class="form-label">📅 Datum</label>
+                    <input type="date" id="edit-session-date" class="form-input" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label">🎯 Disziplin</label>
+                        <select id="edit-session-discipline" class="form-input" required>
+                            <option value="KK">KK</option>
+                            <option value="GK">GK</option>
+                            <option value="VL">VL</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label">📋 Typ</label>
+                        <select id="edit-session-type" class="form-input" required>
+                            <option value="VO">Vortel</option>
+                            <option value="TR">Training</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">🔫 Waffe</label>
+                    <select id="edit-session-weapon" class="form-input">
+                        <option value="">Keine Waffe</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">💣 Munition</label>
+                    <select id="edit-session-ammo" class="form-input">
+                        <option value="">Keine Munition</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">📍 Ort</label>
+                    <input type="text" id="edit-session-location" class="form-input" placeholder="z.B. Schießstand München">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">📝 Notizen</label>
+                    <textarea id="edit-session-notes" class="form-input" rows="3" placeholder="Optional: Notizen zur Session..."></textarea>
+                </div>
+                
+                <!-- Scheiben-Eingabe (nur für Vortel) -->
+                <div id="edit-scheiben-section" style="display: none;">
+                    <h3 style="color: #4CAF50; margin: 25px 0 15px; font-size: 1.1rem; border-top: 1px solid #3d3d54; padding-top: 20px;">🎯 Schusswerte bearbeiten</h3>
+                    
+                    <!-- Rote Scheibe -->
+                    <div class="card" style="margin-bottom: 15px; background: #1a1a2e;">
+                        <div class="card-title" style="font-size: 1rem; color: #f44336;">🔴 Rote Scheibe (0 oder 10)</div>
+                        <div id="edit-red-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
+                            <!-- Dynamisch gefüllt -->
+                        </div>
+                    </div>
+                    
+                    <!-- Grüne Scheibe -->
+                    <div class="card" style="margin-bottom: 15px; background: #1a1a2e;">
+                        <div class="card-title" style="font-size: 1rem; color: #4CAF50;">🟢 Grüne Scheibe (0-10)</div>
+                        <div id="edit-green-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
+                            <!-- Dynamisch gefüllt -->
+                        </div>
+                    </div>
+                    
+                    <!-- Schwarze Scheibe -->
+                    <div class="card" style="margin-bottom: 15px; background: #1a1a2e;">
+                        <div class="card-title" style="font-size: 1rem; color: #fff;">⚫ Schwarze Scheibe (0-10)</div>
+                        <div id="edit-black-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
+                            <!-- Dynamisch gefüllt -->
+                        </div>
+                    </div>
+                    
+                    <!-- Duell -->
+                    <div class="card" id="edit-duell-section" style="margin-bottom: 15px; background: #1a1a2e;">
+                        <div class="card-title" style="font-size: 1rem; color: #FFD700;">⚔️ Duell (0-10 oder Gesamt)</div>
+                        <div style="margin-bottom: 10px;">
+                            <label class="checkbox-label" style="color: #888;">
+                                <input type="checkbox" id="edit-duell-total-mode" onchange="toggleEditDuellMode()">
+                                <span>Gesamtwert eingeben</span>
+                            </label>
+                        </div>
+                        <div id="edit-duell-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
+                            <!-- Dynamisch gefüllt -->
+                        </div>
+                        <div id="edit-duell-total-input" style="display: none;">
+                            <input type="tel" id="edit-duell-total-value" class="form-input" placeholder="Gesamtpunktzahl" style="max-width: 150px;">
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">💾 Speichern</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditSessionModal()" style="flex: 1;">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
     
@@ -2617,6 +2745,9 @@
         
         // Show specific page
         function showPage(page) {
+            // Scroll to top
+            window.scrollTo(0, 0);
+            
             // Hide all pages
             document.querySelectorAll('.page').forEach(p => {
                 p.style.display = 'none';
@@ -4397,7 +4528,8 @@
                         <td class="score-combined">${session.session_type === 'TR' || isVL ? '-' : combined}</td>
                         <td class="score-total">${session.session_type === 'TR' ? '-' : grandTotal}</td>
                         <td>
-                            <button class="btn-small" onclick="openEditModal(${session.id})" style="background: #4CAF50; color: white;">✏️</button>
+                            <button class="btn-small" onclick="openEditModal(${session.id})" style="background: #4CAF50; color: white; margin-right: 5px;">✏️</button>
+                            <button class="btn-small" onclick="deleteSession(${session.id})" style="background: #f44336; color: white;">🗑️</button>
                         </td>
                     `;
                     
@@ -4415,6 +4547,415 @@
                 `;
             }
         }
+        
+        // Delete session
+        async function deleteSession(sessionId) {
+            if (!confirm('Bist du sicher, dass du diesen Eintrag löschen möchtest?\n\nDiese Aktion kann nicht rückgängig gemacht werden.')) {
+                return;
+            }
+            
+            try {
+                // Delete results first (foreign key constraint)
+                const { error: resultsError } = await supabase
+                    .from('results')
+                    .delete()
+                    .eq('session_id', sessionId);
+                
+                if (resultsError) throw resultsError;
+                
+                // Delete duell total
+                await supabase
+                    .from('duell_totals')
+                    .delete()
+                    .eq('session_id', sessionId);
+                
+                // Delete session
+                const { error: sessionError } = await supabase
+                    .from('sessions')
+                    .delete()
+                    .eq('id', sessionId)
+                    .eq('user_id', currentUser.id);
+                
+                if (sessionError) throw sessionError;
+                
+                // Reload history
+                loadHistory();
+                
+                // Show success message briefly
+                const emptyState = document.getElementById('history-empty');
+                emptyState.style.display = 'block';
+                emptyState.innerHTML = `
+                    <div class="empty-state-icon">✅</div>
+                    <p>Eintrag erfolgreich gelöscht</p>
+                `;
+                setTimeout(() => {
+                    loadHistory();
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Error deleting session:', error);
+                alert('Fehler beim Löschen: ' + error.message);
+            }
+        }
+        
+        // ========== EDIT SESSION MODAL FUNCTIONS ==========
+        
+        // Open edit modal for a session
+        async function openEditModal(sessionId) {
+            const modal = document.getElementById('edit-session-modal');
+            const message = document.getElementById('edit-session-message');
+            message.innerHTML = '';
+            
+            try {
+                // Load session data with results
+                const { data: session, error } = await supabase
+                    .from('sessions')
+                    .select(`
+                        *,
+                        results (target_type, shot_number, value),
+                        duell_totals (total)
+                    `)
+                    .eq('id', sessionId)
+                    .eq('user_id', currentUser.id)
+                    .single();
+                
+                if (error) throw error;
+                if (!session) {
+                    alert('Session nicht gefunden');
+                    return;
+                }
+                
+                // Store current editing session data
+                window.editingSession = session;
+                
+                // Fill form
+                document.getElementById('edit-session-id').value = session.id;
+                document.getElementById('edit-session-date').value = session.date;
+                document.getElementById('edit-session-discipline').value = session.discipline;
+                document.getElementById('edit-session-type').value = session.session_type;
+                document.getElementById('edit-session-location').value = session.location || '';
+                document.getElementById('edit-session-notes').value = session.notes || '';
+                
+                // Load weapons and ammo dropdowns
+                await loadEditSessionDropdowns();
+                
+                // Set selected values
+                document.getElementById('edit-session-weapon').value = session.weapon_id || '';
+                document.getElementById('edit-session-ammo').value = session.ammunition_id || '';
+                
+                // Create shot input grids and load existing values (only for Vortel, not Training)
+                if (session.session_type === 'VO') {
+                    await createEditShotGrids(session);
+                    document.getElementById('edit-scheiben-section').style.display = 'block';
+                } else {
+                    document.getElementById('edit-scheiben-section').style.display = 'none';
+                }
+                
+                // Show modal
+                modal.style.display = 'flex';
+                
+            } catch (error) {
+                console.error('Error loading session:', error);
+                alert('Fehler beim Laden der Session: ' + error.message);
+            }
+        }
+        
+        // Create shot input grids for editing
+        async function createEditShotGrids(session) {
+            const config = DISCIPLINE_CONFIG[session.discipline];
+            
+            // Create red grid (5 inputs)
+            const redGrid = document.getElementById('edit-red-grid');
+            redGrid.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const input = document.createElement('input');
+                input.type = 'tel';
+                input.className = 'shot-input';
+                input.id = `edit-red-${i}`;
+                input.placeholder = i;
+                input.style.height = '45px';
+                input.style.textAlign = 'center';
+                redGrid.appendChild(input);
+            }
+            
+            // Create green grid
+            const greenGrid = document.getElementById('edit-green-grid');
+            greenGrid.innerHTML = '';
+            for (let i = 1; i <= config.green; i++) {
+                const input = document.createElement('input');
+                input.type = 'tel';
+                input.className = 'shot-input';
+                input.id = `edit-green-${i}`;
+                input.placeholder = i;
+                input.style.height = '45px';
+                input.style.textAlign = 'center';
+                greenGrid.appendChild(input);
+            }
+            
+            // Create black grid (10 inputs)
+            const blackGrid = document.getElementById('edit-black-grid');
+            blackGrid.innerHTML = '';
+            for (let i = 1; i <= 10; i++) {
+                const input = document.createElement('input');
+                input.type = 'tel';
+                input.className = 'shot-input';
+                input.id = `edit-black-${i}`;
+                input.placeholder = i;
+                input.style.height = '45px';
+                input.style.textAlign = 'center';
+                blackGrid.appendChild(input);
+            }
+            
+            // Create duell grid if applicable
+            const duellSection = document.getElementById('edit-duell-section');
+            if (config.hasDuell) {
+                duellSection.style.display = 'block';
+                const duellGrid = document.getElementById('edit-duell-grid');
+                duellGrid.innerHTML = '';
+                for (let i = 1; i <= config.duell; i++) {
+                    const input = document.createElement('input');
+                    input.type = 'tel';
+                    input.className = 'shot-input';
+                    input.id = `edit-duell-${i}`;
+                    input.placeholder = i;
+                    input.style.height = '45px';
+                    input.style.textAlign = 'center';
+                    duellGrid.appendChild(input);
+                }
+            } else {
+                duellSection.style.display = 'none';
+            }
+            
+            // Fill existing values
+            if (session.results) {
+                session.results.forEach(result => {
+                    const input = document.getElementById(`edit-${result.target_type}-${result.shot_number}`);
+                    if (input) input.value = result.value;
+                });
+            }
+            
+            // Check for duell total mode
+            if (session.duell_totals && session.duell_totals.length > 0) {
+                document.getElementById('edit-duell-total-mode').checked = true;
+                document.getElementById('edit-duell-grid').style.display = 'none';
+                document.getElementById('edit-duell-total-input').style.display = 'block';
+                document.getElementById('edit-duell-total-value').value = session.duell_totals[0].total;
+            } else {
+                document.getElementById('edit-duell-total-mode').checked = false;
+                document.getElementById('edit-duell-grid').style.display = 'grid';
+                document.getElementById('edit-duell-total-input').style.display = 'none';
+                document.getElementById('edit-duell-total-value').value = '';
+            }
+        }
+        
+        // Toggle Duell mode in edit modal
+        function toggleEditDuellMode() {
+            const isTotal = document.getElementById('edit-duell-total-mode').checked;
+            document.getElementById('edit-duell-grid').style.display = isTotal ? 'none' : 'grid';
+            document.getElementById('edit-duell-total-input').style.display = isTotal ? 'block' : 'none';
+        }
+        
+        // Load weapons and ammo dropdowns for edit modal
+        async function loadEditSessionDropdowns() {
+            // Load weapons
+            const { data: weapons } = await supabase
+                .from('weapons')
+                .select('id, manufacturer, model')
+                .eq('user_id', currentUser.id)
+                .eq('archived', false)
+                .order('manufacturer');
+            
+            const weaponSelect = document.getElementById('edit-session-weapon');
+            weaponSelect.innerHTML = '<option value="">Keine Waffe</option>';
+            if (weapons) {
+                weapons.forEach(w => {
+                    weaponSelect.innerHTML += `<option value="${w.id}">${w.manufacturer} ${w.model}</option>`;
+                });
+            }
+            
+            // Load ammo
+            const { data: ammo } = await supabase
+                .from('ammunition')
+                .select('id, manufacturer, caliber')
+                .eq('user_id', currentUser.id)
+                .eq('archived', false)
+                .order('manufacturer');
+            
+            const ammoSelect = document.getElementById('edit-session-ammo');
+            ammoSelect.innerHTML = '<option value="">Keine Munition</option>';
+            if (ammo) {
+                ammo.forEach(a => {
+                    ammoSelect.innerHTML += `<option value="${a.id}">${a.manufacturer} ${a.caliber}</option>`;
+                });
+            }
+        }
+        
+        // Close edit modal
+        function closeEditSessionModal() {
+            document.getElementById('edit-session-modal').style.display = 'none';
+            document.getElementById('edit-session-form').reset();
+            window.editingSession = null;
+            // Clear shot grids
+            document.getElementById('edit-red-grid').innerHTML = '';
+            document.getElementById('edit-green-grid').innerHTML = '';
+            document.getElementById('edit-black-grid').innerHTML = '';
+            document.getElementById('edit-duell-grid').innerHTML = '';
+            document.getElementById('edit-duell-total-value').value = '';
+            document.getElementById('edit-scheiben-section').style.display = 'none';
+        }
+        
+        // Save edited session
+        document.getElementById('edit-session-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const sessionId = document.getElementById('edit-session-id').value;
+            const sessionType = document.getElementById('edit-session-type').value;
+            const message = document.getElementById('edit-session-message');
+            
+            try {
+                // Update session metadata
+                const { error: sessionError } = await supabase
+                    .from('sessions')
+                    .update({
+                        date: document.getElementById('edit-session-date').value,
+                        discipline: document.getElementById('edit-session-discipline').value,
+                        session_type: sessionType,
+                        weapon_id: document.getElementById('edit-session-weapon').value || null,
+                        ammunition_id: document.getElementById('edit-session-ammo').value || null,
+                        location: document.getElementById('edit-session-location').value || null,
+                        notes: document.getElementById('edit-session-notes').value || null
+                    })
+                    .eq('id', sessionId)
+                    .eq('user_id', currentUser.id);
+                
+                if (sessionError) throw sessionError;
+                
+                // Only update shot values for Vortel sessions
+                if (sessionType === 'VO') {
+                    const config = DISCIPLINE_CONFIG[document.getElementById('edit-session-discipline').value];
+                    
+                    // Delete old results
+                    await supabase
+                        .from('results')
+                        .delete()
+                        .eq('session_id', sessionId);
+                    
+                    // Delete old duell total
+                    await supabase
+                        .from('duell_totals')
+                        .delete()
+                        .eq('session_id', sessionId);
+                    
+                    // Insert new red results (5 shots)
+                    const redResults = [];
+                    for (let i = 1; i <= 5; i++) {
+                        const val = parseInt(document.getElementById(`edit-red-${i}`)?.value);
+                        if (!isNaN(val)) {
+                            redResults.push({
+                                session_id: sessionId,
+                                target_type: 'red',
+                                shot_number: i,
+                                value: val
+                            });
+                        }
+                    }
+                    if (redResults.length > 0) {
+                        await supabase.from('results').insert(redResults);
+                    }
+                    
+                    // Insert new green results
+                    const greenResults = [];
+                    for (let i = 1; i <= config.green; i++) {
+                        const val = parseInt(document.getElementById(`edit-green-${i}`)?.value);
+                        if (!isNaN(val)) {
+                            greenResults.push({
+                                session_id: sessionId,
+                                target_type: 'green',
+                                shot_number: i,
+                                value: val
+                            });
+                        }
+                    }
+                    if (greenResults.length > 0) {
+                        await supabase.from('results').insert(greenResults);
+                    }
+                    
+                    // Insert new black results (10 shots)
+                    const blackResults = [];
+                    for (let i = 1; i <= 10; i++) {
+                        const val = parseInt(document.getElementById(`edit-black-${i}`)?.value);
+                        if (!isNaN(val)) {
+                            blackResults.push({
+                                session_id: sessionId,
+                                target_type: 'black',
+                                shot_number: i,
+                                value: val
+                            });
+                        }
+                    }
+                    if (blackResults.length > 0) {
+                        await supabase.from('results').insert(blackResults);
+                    }
+                    
+                    // Insert new duell results (if applicable)
+                    if (config.hasDuell) {
+                        const isTotalMode = document.getElementById('edit-duell-total-mode').checked;
+                        
+                        if (isTotalMode) {
+                            // Save duell total
+                            const totalVal = parseInt(document.getElementById('edit-duell-total-value').value);
+                            if (!isNaN(totalVal)) {
+                                await supabase.from('duell_totals').insert({
+                                    session_id: sessionId,
+                                    total: totalVal
+                                });
+                            }
+                        } else {
+                            // Save individual duell shots
+                            const duellResults = [];
+                            for (let i = 1; i <= config.duell; i++) {
+                                const val = parseInt(document.getElementById(`edit-duell-${i}`)?.value);
+                                if (!isNaN(val)) {
+                                    duellResults.push({
+                                        session_id: sessionId,
+                                        target_type: 'duell',
+                                        shot_number: i,
+                                        value: val
+                                    });
+                                }
+                            }
+                            if (duellResults.length > 0) {
+                                await supabase.from('results').insert(duellResults);
+                            }
+                        }
+                    }
+                }
+                
+                // Show success
+                message.innerHTML = '<div class="message success">✅ Session erfolgreich aktualisiert!</div>';
+                
+                // Close modal after short delay
+                setTimeout(() => {
+                    closeEditSessionModal();
+                    window.editingSession = null;
+                    // Reload history if on history page
+                    if (document.getElementById('history-tbody')) {
+                        loadHistory();
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Error updating session:', error);
+                message.innerHTML = '<div class="message error">❌ Fehler: ' + error.message + '</div>';
+            }
+        });
+        
+        // Close modal when clicking outside
+        document.getElementById('edit-session-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'edit-session-modal') {
+                closeEditSessionModal();
+            }
+        });
         
         // ========== SESSION INPUT LOGIC ==========
         
