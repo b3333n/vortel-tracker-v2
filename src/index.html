@@ -4528,7 +4528,8 @@
                         <td class="score-combined">${session.session_type === 'TR' || isVL ? '-' : combined}</td>
                         <td class="score-total">${session.session_type === 'TR' ? '-' : grandTotal}</td>
                         <td>
-                            <button class="btn-small" onclick="openEditModal(${session.id})" style="background: #4CAF50; color: white;">✏️</button>
+                            <button class="btn-small" onclick="openEditModal(${session.id})" style="background: #4CAF50; color: white; margin-right: 5px;">✏️</button>
+                            <button class="btn-small" onclick="deleteSession(${session.id})" style="background: #f44336; color: white;">🗑️</button>
                         </td>
                     `;
                     
@@ -4544,6 +4545,56 @@
                     <p>Fehler beim Laden der Historie</p>
                     <p style="font-size: 0.85rem; margin-top: 10px;">${error.message}</p>
                 `;
+            }
+        }
+        
+        // Delete session
+        async function deleteSession(sessionId) {
+            if (!confirm('Bist du sicher, dass du diesen Eintrag löschen möchtest?\n\nDiese Aktion kann nicht rückgängig gemacht werden.')) {
+                return;
+            }
+            
+            try {
+                // Delete results first (foreign key constraint)
+                const { error: resultsError } = await supabase
+                    .from('results')
+                    .delete()
+                    .eq('session_id', sessionId);
+                
+                if (resultsError) throw resultsError;
+                
+                // Delete duell total
+                await supabase
+                    .from('duell_totals')
+                    .delete()
+                    .eq('session_id', sessionId);
+                
+                // Delete session
+                const { error: sessionError } = await supabase
+                    .from('sessions')
+                    .delete()
+                    .eq('id', sessionId)
+                    .eq('user_id', currentUser.id);
+                
+                if (sessionError) throw sessionError;
+                
+                // Reload history
+                loadHistory();
+                
+                // Show success message briefly
+                const emptyState = document.getElementById('history-empty');
+                emptyState.style.display = 'block';
+                emptyState.innerHTML = `
+                    <div class="empty-state-icon">✅</div>
+                    <p>Eintrag erfolgreich gelöscht</p>
+                `;
+                setTimeout(() => {
+                    loadHistory();
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Error deleting session:', error);
+                alert('Fehler beim Löschen: ' + error.message);
             }
         }
         
