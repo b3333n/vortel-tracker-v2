@@ -4539,7 +4539,7 @@
                     .from('sessions')
                     .select(`
                         *,
-                        results (target_type, value),
+                        results (target_type, shot_number, value),
                         duell_totals (total)
                     `)
                     .eq('id', sessionId)
