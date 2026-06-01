@@ -5023,6 +5023,9 @@
             createInputGrids();
             loadEquipmentDropdowns();
             
+            // Initialize session type to VO (Vortel)
+            setSessionType('VO');
+            
             // Restore saved input after a short delay
             setTimeout(restoreInputFromStorage, 300);
         }
