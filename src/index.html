@@ -1477,6 +1477,7 @@
                             <button type="button" class="discipline-btn active" data-discipline="KK" onclick="setDiscipline('KK')">🔫 KK</button>
                             <button type="button" class="discipline-btn" data-discipline="GK" onclick="setDiscipline('GK')">🎯 GK</button>
                             <button type="button" class="discipline-btn" data-discipline="VL" onclick="setDiscipline('VL')">⚫ VL</button>
+                            <button type="button" class="discipline-btn" data-discipline="UHR" onclick="setDiscipline('UHR')">🔄 UHR</button>
                         </div>
                         <div id="discipline-subtitle" class="discipline-subtitle">Kleinkaliber - 5/15/10/15</div>
                     </div>
@@ -1526,7 +1527,7 @@
                     <div class="target-section">
                         <div class="target-header">
                             <div class="target-icon red">🔴</div>
-                            <div>Rote Scheibe <span class="target-hint red-hint">(nur 10 oder 0)</span></div>
+                            <div>Rote Scheibe <span id="red-hint-text" class="target-hint red-hint">(nur 10 oder 0)</span></div>
                         </div>
                         <div class="shots-grid" id="red-grid"></div>
                         <div class="target-total">
@@ -1675,6 +1676,7 @@
                             <option value="KK">🔫 Kleinkaliber (KK)</option>
                             <option value="GK">🎯 Großkaliber (GK)</option>
                             <option value="VL">⚫ Vorderlader (VL)</option>
+                            <option value="UHR">🔄 Unterhebelrepetierer (UHR)</option>
                         </select>
                     </div>
                     
@@ -1760,6 +1762,7 @@
                         <button type="button" class="discipline-btn active" data-discipline="KK" onclick="setStatsDiscipline('KK')">🔫 KK</button>
                         <button type="button" class="discipline-btn" data-discipline="GK" onclick="setStatsDiscipline('GK')">🎯 GK</button>
                         <button type="button" class="discipline-btn" data-discipline="VL" onclick="setStatsDiscipline('VL')">⚫ VL</button>
+                        <button type="button" class="discipline-btn" data-discipline="UHR" onclick="setStatsDiscipline('UHR')">🔄 UHR</button>
                     </div>
                 </div>
                 
@@ -2482,6 +2485,7 @@
                             <option value="KK">KK</option>
                             <option value="GK">GK</option>
                             <option value="VL">VL</option>
+                            <option value="UHR">UHR</option>
                         </select>
                     </div>
                     <div class="form-group" style="flex: 1;">
@@ -3001,8 +3005,11 @@
                 data.black.push(Math.round(blackAvg * 10) / 10);
                 data.duell.push(Math.round(duellAvg * 10) / 10);
                 
-                // Scoring: Grün+Duell (KK/GK) or Grün+Rot (VL)
-                if (config.hasDuell) {
+                // Scoring: Grün+Duell (KK/GK) or Grün+Rot (VL) or Gesamtpunkte (UHR)
+                if (config.redFullRange) {
+                    // UHR: Alle Punkte zusammen
+                    data.scoring.push(Math.round((redAvg + greenAvg + blackAvg) * 10) / 10);
+                } else if (config.hasDuell) {
                     data.scoring.push(Math.round((greenAvg + duellAvg) * 10) / 10);
                 } else {
                     data.scoring.push(Math.round((greenAvg + redAvg) * 10) / 10);
@@ -3040,8 +3047,17 @@
                         duellTotal = s.duell_totals[0].total;
                     }
                     
-                    // KK/GK: Grün + Duell, VL: Grün + Rot
-                    if (config.hasDuell) {
+                    // KK/GK: Grün + Duell, VL: Grün + Rot, UHR: Alle Punkte
+                    if (config.redFullRange) {
+                        // UHR: Gesamtpunkte (Rot + Grün + Schwarz)
+                        let blackTotal = 0;
+                        if (s.results) {
+                            s.results.forEach(r => {
+                                if (r.target_type === 'black') blackTotal += r.value;
+                            });
+                        }
+                        return redTotal + greenTotal + blackTotal;
+                    } else if (config.hasDuell) {
                         return greenTotal + duellTotal;
                     } else {
                         return greenTotal + redTotal;
@@ -3060,7 +3076,14 @@
             document.getElementById('prev-year-label').textContent = prevYear;
             
             const config = DISCIPLINE_CONFIG[statsDiscipline];
-            const yearTypeLabel = config.hasDuell ? 'Grün + Duell' : 'Grün + Rot';
+            let yearTypeLabel;
+            if (config.redFullRange) {
+                yearTypeLabel = 'Gesamtpunkte';
+            } else if (config.hasDuell) {
+                yearTypeLabel = 'Grün + Duell';
+            } else {
+                yearTypeLabel = 'Grün + Rot';
+            }
             
             document.getElementById('current-year-type').textContent = yearTypeLabel;
             document.getElementById('prev-year-type').textContent = yearTypeLabel;
@@ -3176,43 +3199,64 @@
             
             // Update scoring title based on discipline
             const scoringTitle = document.getElementById('chart-scoring-title');
-            if (config.hasDuell) {
+            if (config.redFullRange) {
+                // UHR: Gesamtpunkte (alle Farben zusammen)
+                scoringTitle.textContent = '🏆 Gesamtpunkte';
+            } else if (config.hasDuell) {
                 scoringTitle.textContent = '🏆 Grün + Duell (Wertungsrelevant)';
             } else {
                 scoringTitle.textContent = '🏆 Grün + Rot (Wertungsrelevant)';
             }
             
             // Wertungsrelevant Chart (Full Width) - 3 Linien wie in V1
-            const scoringDatasets = [
-                { 
-                    label: 'Grün', 
-                    data: data.green, 
-                    borderColor: '#4CAF50', 
-                    backgroundColor: 'transparent',
-                    tension: 0.3,
-                    spanGaps: true
-                },
-                { 
-                    label: 'Gesamt', 
-                    data: data.scoring, 
-                    borderColor: '#FFC107', 
-                    backgroundColor: 'transparent',
-                    tension: 0.3,
-                    borderWidth: 3,
-                    spanGaps: true
-                }
-            ];
+            let scoringDatasets;
             
-            // Nur bei KK/GK auch Duell-Linie anzeigen
-            if (config.hasDuell) {
-                scoringDatasets.splice(1, 0, { 
-                    label: 'Duell', 
-                    data: data.duell, 
-                    borderColor: '#2196F3', 
-                    backgroundColor: 'transparent',
-                    tension: 0.3,
-                    spanGaps: true
-                });
+            if (config.redFullRange) {
+                // UHR: Nur Gesamtpunkte (alle Farben zusammen)
+                scoringDatasets = [
+                    { 
+                        label: 'Gesamtpunkte', 
+                        data: data.scoring, 
+                        borderColor: '#FFC107', 
+                        backgroundColor: 'transparent',
+                        tension: 0.3,
+                        borderWidth: 3,
+                        spanGaps: true
+                    }
+                ];
+            } else {
+                // KK/GK/VL: Grün + Duell oder Grün + Rot
+                scoringDatasets = [
+                    { 
+                        label: 'Grün', 
+                        data: data.green, 
+                        borderColor: '#4CAF50', 
+                        backgroundColor: 'transparent',
+                        tension: 0.3,
+                        spanGaps: true
+                    },
+                    { 
+                        label: 'Gesamt', 
+                        data: data.scoring, 
+                        borderColor: '#FFC107', 
+                        backgroundColor: 'transparent',
+                        tension: 0.3,
+                        borderWidth: 3,
+                        spanGaps: true
+                    }
+                ];
+                
+                // Nur bei KK/GK auch Duell-Linie anzeigen
+                if (config.hasDuell) {
+                    scoringDatasets.splice(1, 0, { 
+                        label: 'Duell', 
+                        data: data.duell, 
+                        borderColor: '#2196F3', 
+                        backgroundColor: 'transparent',
+                        tension: 0.3,
+                        spanGaps: true
+                    });
+                }
             }
             
             statsCharts.scoring = new Chart(document.getElementById('chart-scoring'), {
@@ -4969,7 +5013,8 @@
         const DISCIPLINE_CONFIG = {
             KK: { green: 15, black: 10, duell: 15, duellMax: 150, hasDuell: true, subtitle: 'Kleinkaliber - 5/15/10/15' },
             GK: { green: 20, black: 10, duell: 20, duellMax: 200, hasDuell: true, subtitle: 'Großkaliber - 5/20/10/20' },
-            VL: { green: 10, black: 10, duell: 0, duellMax: 0, hasDuell: false, subtitle: 'Vorderlader - 5/10/10' }
+            VL: { green: 10, black: 10, duell: 0, duellMax: 0, hasDuell: false, subtitle: 'Vorderlader - 5/10/10' },
+            UHR: { green: 15, black: 10, duell: 0, duellMax: 0, hasDuell: false, subtitle: 'Unterhebelrepetierer', redFullRange: true }
         };
         
         // Initialize Session Input
@@ -4998,6 +5043,12 @@
             
             // Subtitle aktualisieren
             document.getElementById('discipline-subtitle').textContent = config.subtitle;
+            
+            // Hinweis für rote Scheibe aktualisieren
+            const redHint = document.getElementById('red-hint-text');
+            if (redHint) {
+                redHint.textContent = config.redFullRange ? '(0-10 erlaubt)' : '(nur 10 oder 0)';
+            }
             
             // Schusszahl-Anzeigen aktualisieren
             document.getElementById('green-shot-count').textContent = `(${config.green} Schuss)`;
@@ -5154,8 +5205,8 @@
             const num = parseInt(numStr);
             const config = DISCIPLINE_CONFIG[currentDiscipline];
             
-            // Bei roter Scheibe: nur 0 oder 10 erlaubt
-            if (target === 'red') {
+            // Bei roter Scheibe: nur 0 oder 10 erlaubt (außer UHR - da 0-10 erlaubt)
+            if (target === 'red' && !config.redFullRange) {
                 const val = parseInt(input.value);
                 if (val !== 0 && val !== 10) return;
             }
@@ -5194,8 +5245,10 @@
         // Validate and Calculate
         function validateAndCalculate(input, isRed) {
             const val = parseInt(input.value);
+            const config = DISCIPLINE_CONFIG[currentDiscipline];
             
-            if (isRed && val !== 0 && val !== 10) {
+            // Bei roter Scheibe: normal nur 0 oder 10, aber bei UHR 0-10 erlaubt
+            if (isRed && !config.redFullRange && val !== 0 && val !== 10) {
                 input.style.borderColor = '#f44336';
             } else if (val < 0 || val > 10) {
                 input.style.borderColor = '#f44336';
