@@ -1811,8 +1811,9 @@
                 <!-- Stats Content -->
                 <div id="stats-content" style="display: none;">
                     <!-- Year Comparison - Vorjahr links, aktuelles Jahr rechts -->
+                    <!-- Jahresvergleich - alle Wertungen -->
                     <div class="card" id="year-compare-card">
-                        <div class="card-title">📅 Jahresvergleich (Ø Top 10 Wertungen)</div>
+                        <div class="card-title">📅 Jahresvergleich - alle Wertungen</div>
                         <div class="year-compare">
                             <div class="year-box">
                                 <div class="year-label" id="prev-year-label">2025</div>
@@ -1825,6 +1826,25 @@
                                 <div class="year-value" id="current-year-avg">-</div>
                                 <div class="year-detail" id="current-year-detail">- Wertungen</div>
                                 <div class="year-type" id="current-year-type">🟢 Grün + ⚔️ Duell</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Jahresvergleich - Top 10 Wertungen -->
+                    <div class="card" id="year-compare-top10-card">
+                        <div class="card-title">📅 Jahresvergleich - Top 10 Wertungen</div>
+                        <div class="year-compare">
+                            <div class="year-box">
+                                <div class="year-label" id="prev-year-top10-label">2025</div>
+                                <div class="year-value" id="prev-year-top10-avg">-</div>
+                                <div class="year-detail" id="prev-year-top10-detail">- Wertungen</div>
+                                <div class="year-type" id="prev-year-top10-type">🟢 Grün + ⚔️ Duell</div>
+                            </div>
+                            <div class="year-box">
+                                <div class="year-label" id="current-year-top10-label">2026</div>
+                                <div class="year-value" id="current-year-top10-avg">-</div>
+                                <div class="year-detail" id="current-year-top10-detail">- Wertungen</div>
+                                <div class="year-type" id="current-year-top10-type">🟢 Grün + ⚔️ Duell</div>
                             </div>
                         </div>
                     </div>
@@ -3026,56 +3046,75 @@
             const currentYearSessions = sessions.filter(s => new Date(s.date).getFullYear() === currentYear);
             const prevYearSessions = sessions.filter(s => new Date(s.date).getFullYear() === prevYear);
             
-            // Calculate top 10 average for each year (only scoring points: green+duell or green+red)
+            const config = DISCIPLINE_CONFIG[statsDiscipline];
+            
+            // Helper: Calculate total score for a session based on discipline config
+            const calcSessionTotal = (s) => {
+                let greenTotal = 0, redTotal = 0, duellTotal = 0;
+                
+                if (s.results) {
+                    s.results.forEach(r => {
+                        if (r.target_type === 'green') greenTotal += r.value;
+                        else if (r.target_type === 'red') redTotal += r.value;
+                        else if (r.target_type === 'duell') duellTotal += r.value;
+                    });
+                }
+                
+                if (s.duell_totals && s.duell_totals.length > 0) {
+                    duellTotal = s.duell_totals[0].total;
+                }
+                
+                // KK/GK: Grün + Duell, VL: Grün + Rot, UHR: Alle Punkte
+                if (config.redFullRange) {
+                    // UHR: Gesamtpunkte (Rot + Grün + Schwarz)
+                    let blackTotal = 0;
+                    if (s.results) {
+                        s.results.forEach(r => {
+                            if (r.target_type === 'black') blackTotal += r.value;
+                        });
+                    }
+                    return redTotal + greenTotal + blackTotal;
+                } else if (config.hasDuell) {
+                    return greenTotal + duellTotal;
+                } else {
+                    return greenTotal + redTotal;
+                }
+            };
+            
+            // Calculate average of ALL sessions for each year
+            const calcAllAvg = (yearSessions) => {
+                if (yearSessions.length === 0) return null;
+                
+                const totals = yearSessions.map(s => calcSessionTotal(s));
+                const avg = totals.reduce((a, b) => a + b, 0) / totals.length;
+                return { avg: Math.round(avg), count: yearSessions.length };
+            };
+            
+            // Calculate top 10 average for each year
             const calcTop10Avg = (yearSessions) => {
                 if (yearSessions.length === 0) return null;
                 
-                const config = DISCIPLINE_CONFIG[statsDiscipline];
-                
-                const totals = yearSessions.map(s => {
-                    let greenTotal = 0, redTotal = 0, duellTotal = 0;
-                    
-                    if (s.results) {
-                        s.results.forEach(r => {
-                            if (r.target_type === 'green') greenTotal += r.value;
-                            else if (r.target_type === 'red') redTotal += r.value;
-                            else if (r.target_type === 'duell') duellTotal += r.value;
-                        });
-                    }
-                    
-                    if (s.duell_totals && s.duell_totals.length > 0) {
-                        duellTotal = s.duell_totals[0].total;
-                    }
-                    
-                    // KK/GK: Grün + Duell, VL: Grün + Rot, UHR: Alle Punkte
-                    if (config.redFullRange) {
-                        // UHR: Gesamtpunkte (Rot + Grün + Schwarz)
-                        let blackTotal = 0;
-                        if (s.results) {
-                            s.results.forEach(r => {
-                                if (r.target_type === 'black') blackTotal += r.value;
-                            });
-                        }
-                        return redTotal + greenTotal + blackTotal;
-                    } else if (config.hasDuell) {
-                        return greenTotal + duellTotal;
-                    } else {
-                        return greenTotal + redTotal;
-                    }
-                });
-                
+                const totals = yearSessions.map(s => calcSessionTotal(s));
                 const top10 = totals.sort((a, b) => b - a).slice(0, 10);
                 const avg = top10.reduce((a, b) => a + b, 0) / top10.length;
                 return { avg: Math.round(avg), count: yearSessions.length };
             };
             
-            const currentStats = calcTop10Avg(currentYearSessions);
-            const prevStats = calcTop10Avg(prevYearSessions);
+            // Stats for "alle Wertungen"
+            const currentStatsAll = calcAllAvg(currentYearSessions);
+            const prevStatsAll = calcAllAvg(prevYearSessions);
             
+            // Stats for "Top 10"
+            const currentStatsTop10 = calcTop10Avg(currentYearSessions);
+            const prevStatsTop10 = calcTop10Avg(prevYearSessions);
+            
+            // Year labels
             document.getElementById('current-year-label').textContent = currentYear;
             document.getElementById('prev-year-label').textContent = prevYear;
+            document.getElementById('current-year-top10-label').textContent = currentYear;
+            document.getElementById('prev-year-top10-label').textContent = prevYear;
             
-            const config = DISCIPLINE_CONFIG[statsDiscipline];
+            // Year type label
             let yearTypeLabel;
             if (config.redFullRange) {
                 yearTypeLabel = 'Gesamtpunkte';
@@ -3087,19 +3126,22 @@
             
             document.getElementById('current-year-type').textContent = yearTypeLabel;
             document.getElementById('prev-year-type').textContent = yearTypeLabel;
+            document.getElementById('current-year-top10-type').textContent = yearTypeLabel;
+            document.getElementById('prev-year-top10-type').textContent = yearTypeLabel;
             
+            // --- Fill "alle Wertungen" section ---
             const currentYearValue = document.getElementById('current-year-avg');
             const prevYearValue = document.getElementById('prev-year-avg');
             
-            if (currentStats) {
-                currentYearValue.textContent = currentStats.avg;
-                document.getElementById('current-year-detail').textContent = `${currentStats.count} Wertungen`;
+            if (currentStatsAll) {
+                currentYearValue.textContent = currentStatsAll.avg;
+                document.getElementById('current-year-detail').textContent = `${currentStatsAll.count} Wertungen`;
                 
                 // Color logic: green if better than previous year, red if worse
-                if (prevStats) {
-                    if (currentStats.avg > prevStats.avg) {
+                if (prevStatsAll) {
+                    if (currentStatsAll.avg > prevStatsAll.avg) {
                         currentYearValue.style.color = '#4CAF50'; // Better = green
-                    } else if (currentStats.avg < prevStats.avg) {
+                    } else if (currentStatsAll.avg < prevStatsAll.avg) {
                         currentYearValue.style.color = '#f44336'; // Worse = red
                     } else {
                         currentYearValue.style.color = '#FFC107'; // Same = yellow
@@ -3113,14 +3155,50 @@
                 document.getElementById('current-year-detail').textContent = 'Keine Daten';
             }
             
-            if (prevStats) {
-                prevYearValue.textContent = prevStats.avg;
+            if (prevStatsAll) {
+                prevYearValue.textContent = prevStatsAll.avg;
                 prevYearValue.style.color = '#888'; // Previous year always gray
-                document.getElementById('prev-year-detail').textContent = `${prevStats.count} Wertungen`;
+                document.getElementById('prev-year-detail').textContent = `${prevStatsAll.count} Wertungen`;
             } else {
                 prevYearValue.textContent = '-';
                 prevYearValue.style.color = '#888';
                 document.getElementById('prev-year-detail').textContent = 'Keine Daten';
+            }
+            
+            // --- Fill "Top 10" section ---
+            const currentYearTop10Value = document.getElementById('current-year-top10-avg');
+            const prevYearTop10Value = document.getElementById('prev-year-top10-avg');
+            
+            if (currentStatsTop10) {
+                currentYearTop10Value.textContent = currentStatsTop10.avg;
+                document.getElementById('current-year-top10-detail').textContent = `${Math.min(currentStatsTop10.count, 10)} Wertungen`;
+                
+                // Color logic: green if better than previous year, red if worse
+                if (prevStatsTop10) {
+                    if (currentStatsTop10.avg > prevStatsTop10.avg) {
+                        currentYearTop10Value.style.color = '#4CAF50'; // Better = green
+                    } else if (currentStatsTop10.avg < prevStatsTop10.avg) {
+                        currentYearTop10Value.style.color = '#f44336'; // Worse = red
+                    } else {
+                        currentYearTop10Value.style.color = '#FFC107'; // Same = yellow
+                    }
+                } else {
+                    currentYearTop10Value.style.color = '#4CAF50'; // No comparison = default green
+                }
+            } else {
+                currentYearTop10Value.textContent = '-';
+                currentYearTop10Value.style.color = '#4CAF50';
+                document.getElementById('current-year-top10-detail').textContent = 'Keine Daten';
+            }
+            
+            if (prevStatsTop10) {
+                prevYearTop10Value.textContent = prevStatsTop10.avg;
+                prevYearTop10Value.style.color = '#888'; // Previous year always gray
+                document.getElementById('prev-year-top10-detail').textContent = `${Math.min(prevStatsTop10.count, 10)} Wertungen`;
+            } else {
+                prevYearTop10Value.textContent = '-';
+                prevYearTop10Value.style.color = '#888';
+                document.getElementById('prev-year-top10-detail').textContent = 'Keine Daten';
             }
         }
         
