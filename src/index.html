@@ -2931,6 +2931,22 @@
                 
                 if (error) throw error;
                 
+                // Fetch unfiltered sessions for L12M (independent of date filter)
+                let l12mQuery = supabase
+                    .from('sessions')
+                    .select('date')
+                    .eq('user_id', currentUser.id)
+                    .eq('discipline', statsDiscipline)
+                    .eq('session_type', 'VO');
+                
+                // Apply only weapon/ammo filters for L12M, NOT date filters
+                if (weaponFilter) l12mQuery = l12mQuery.eq('weapon_id', weaponFilter);
+                if (ammoFilter) l12mQuery = l12mQuery.eq('ammunition_id', ammoFilter);
+                
+                const { data: l12mSessions, error: l12mError } = await l12mQuery;
+                
+                if (l12mError) console.error('Error loading L12M data:', l12mError);
+                
                 loading.style.display = 'none';
                 
                 if (!sessions || sessions.length === 0) {
@@ -2946,10 +2962,12 @@
                 // Update counters
                 document.getElementById('stats-count').textContent = sessions.length;
                 
-                // Calculate L12M
+                // Calculate L12M from unfiltered data (independent of date filter)
                 const oneYearAgo = new Date();
                 oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-                const l12mCount = sessions.filter(s => new Date(s.date) >= oneYearAgo).length;
+                const l12mCount = l12mSessions 
+                    ? l12mSessions.filter(s => new Date(s.date) >= oneYearAgo).length 
+                    : 0;
                 document.getElementById('stats-l12m').textContent = l12mCount;
                 
                 // Year comparison
