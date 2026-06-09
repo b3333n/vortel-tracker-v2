@@ -178,73 +178,44 @@
             margin-top: 5px;
         }
         
-        .session-type-toggle {
+        .session-type-selector {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            padding: 10px;
+            gap: 0;
+            padding: 4px;
             background: #1a1a2e;
             border-radius: 8px;
             border: 2px solid #3d3d54;
         }
         
-        .type-label {
+        .type-btn {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            background: transparent;
+            color: #888;
             font-weight: 600;
-        }
-        
-        .type-label#type-vortel {
-            color: #f44336;
-        }
-        
-        .type-label#type-training {
-            color: #4CAF50;
-        }
-        
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 24px;
             cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 6px;
         }
         
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
+        .type-btn:hover {
+            color: #fff;
         }
         
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #f44336;
-            transition: .3s;
-            border-radius: 24px;
+        .type-btn.active {
+            background: #f44336;
+            color: #fff;
         }
         
-        .toggle-slider:before {
-            position: absolute;
-            content: '';
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .3s;
-            border-radius: 50%;
+        .type-btn.active[data-type="TR"],
+        .type-btn#type-btn-tr.active {
+            background: #4CAF50;
         }
         
-        .toggle-switch input:checked + .toggle-slider {
-            background-color: #4CAF50;
-        }
-        
-        .toggle-switch input:checked + .toggle-slider:before {
-            transform: translateX(26px);
+        .type-btn.active[data-type="EVT"],
+        .type-btn#type-btn-evt.active {
+            background: #9C27B0;
         }
         
         .form-row {
@@ -1047,6 +1018,7 @@
         
         .type-badge.vo { background: rgba(244, 67, 54, 0.2); color: #f44336; }
         .type-badge.tr { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
+        .type-badge.evt { background: rgba(156, 39, 176, 0.2); color: #9C27B0; }
         
         .score-red { color: #f44336; font-weight: 600; }
         .score-green { color: #4CAF50; font-weight: 600; }
@@ -1482,17 +1454,15 @@
                         <div id="discipline-subtitle" class="discipline-subtitle">Kleinkaliber - 5/15/10/15</div>
                     </div>
                     
-                    <!-- Session Type Toggle -->
+                    <!-- Session Type Selector -->
                     <div class="form-group">
                         <label class="form-label">Typ</label>
-                        <div class="session-type-toggle">
-                            <span class="type-label" id="type-vortel">Vortel</span>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="session-type-toggle" onchange="toggleSessionType()">
-                                <span class="toggle-slider"></span>
-                            </label>
-                            <span class="type-label" id="type-training">Training</span>
+                        <div class="session-type-selector">
+                            <button type="button" class="type-btn active" id="type-btn-vo" onclick="setSessionType('VO')">Vortel</button>
+                            <button type="button" class="type-btn" id="type-btn-tr" onclick="setSessionType('TR')">Training</button>
+                            <button type="button" class="type-btn" id="type-btn-evt" onclick="setSessionType('EVT')">Event</button>
                         </div>
+                        <input type="hidden" id="session-type" value="VO">
                     </div>
                     
                     <!-- Weapon & Ammunition -->
@@ -1518,6 +1488,15 @@
                     <div class="form-group">
                         <label class="form-label">Notizen</label>
                         <textarea id="training-notes" class="form-input" rows="3" placeholder="Was hast du trainiert?"></textarea>
+                    </div>
+                </div>
+                
+                <!-- Event Only Fields -->
+                <div id="event-only" class="card" style="display: none;">
+                    <div class="card-title">📝 Event Details</div>
+                    <div class="form-group">
+                        <label class="form-label">Notizen</label>
+                        <textarea id="event-notes" class="form-input" rows="3" placeholder="Event Details..."></textarea>
                     </div>
                 </div>
                 
@@ -1687,6 +1666,7 @@
                             <option value="">Alle Typen</option>
                             <option value="VO">🔴 Vortel (VO)</option>
                             <option value="TR">🟢 Training (TR)</option>
+                            <option value="EVT">🟣 Event (EVT)</option>
                         </select>
                     </div>
                     
@@ -2513,6 +2493,7 @@
                         <select id="edit-session-type" class="form-input" required>
                             <option value="VO">Vortel</option>
                             <option value="TR">Training</option>
+                            <option value="EVT">Event</option>
                         </select>
                     </div>
                 </div>
@@ -4126,11 +4107,11 @@
                     waffenart: weaponType,
                     munition: ammoInfo,
                     stand: session.location || '',
-                    rot: session.session_type === 'TR' ? '' : redTotal,
-                    gruen: session.session_type === 'TR' ? '' : greenTotal,
-                    schwarz: session.session_type === 'TR' ? '' : blackTotal,
-                    duell: (session.session_type === 'TR' || session.discipline === 'VL') ? '' : duellTotal,
-                    gesamt: session.session_type === 'TR' ? '' : (redTotal + greenTotal + blackTotal + duellTotal)
+                    rot: (session.session_type === 'TR' || session.session_type === 'EVT') ? '' : redTotal,
+                    gruen: (session.session_type === 'TR' || session.session_type === 'EVT') ? '' : greenTotal,
+                    schwarz: (session.session_type === 'TR' || session.session_type === 'EVT') ? '' : blackTotal,
+                    duell: (session.session_type === 'TR' || session.session_type === 'EVT' || session.discipline === 'VL') ? '' : duellTotal,
+                    gesamt: (session.session_type === 'TR' || session.session_type === 'EVT') ? '' : (redTotal + greenTotal + blackTotal + duellTotal)
                 };
                 
                 csv += selected.map(col => values[col]).join(';') + '\n';
@@ -4671,14 +4652,14 @@
                         <td class="date-cell">${dateStr}</td>
                         <td>${rowNum}</td>
                         <td><span class="discipline-badge ${session.discipline.toLowerCase()}">${session.discipline}</span></td>
-                        <td><span class="type-badge ${session.session_type.toLowerCase()}">${session.session_type === 'VO' ? 'Vortel' : 'Training'}</span></td>
+                        <td><span class="type-badge ${session.session_type.toLowerCase()}">${session.session_type === 'VO' ? 'Vortel' : session.session_type === 'TR' ? 'Training' : 'Event'}</span></td>
                         <td class="weapon-cell">${weaponInfo}</td>
-                        <td class="score-red">${session.session_type === 'TR' ? '-' : redTotal}</td>
-                        <td class="score-green">${session.session_type === 'TR' ? '-' : greenTotal}</td>
-                        <td class="score-duell">${session.session_type === 'TR' || isVL ? '-' : duellTotal}</td>
-                        <td class="score-black">${session.session_type === 'TR' ? '-' : blackTotal}</td>
-                        <td class="score-combined">${session.session_type === 'TR' || isVL ? '-' : combined}</td>
-                        <td class="score-total">${session.session_type === 'TR' ? '-' : grandTotal}</td>
+                        <td class="score-red">${(session.session_type === 'TR' || session.session_type === 'EVT') ? '-' : redTotal}</td>
+                        <td class="score-green">${(session.session_type === 'TR' || session.session_type === 'EVT') ? '-' : greenTotal}</td>
+                        <td class="score-duell">${(session.session_type === 'TR' || session.session_type === 'EVT' || isVL) ? '-' : duellTotal}</td>
+                        <td class="score-black">${(session.session_type === 'TR' || session.session_type === 'EVT') ? '-' : blackTotal}</td>
+                        <td class="score-combined">${(session.session_type === 'TR' || session.session_type === 'EVT' || isVL) ? '-' : combined}</td>
+                        <td class="score-total">${(session.session_type === 'TR' || session.session_type === 'EVT') ? '-' : grandTotal}</td>
                         <td>
                             <button class="btn-small" onclick="openEditModal(${session.id})" style="background: #4CAF50; color: white; margin-right: 5px;">✏️</button>
                             <button class="btn-small" onclick="deleteSession(${session.id})" style="background: #f44336; color: white;">🗑️</button>
@@ -4982,7 +4963,7 @@
                 
                 if (sessionError) throw sessionError;
                 
-                // Only update shot values for Vortel sessions
+                // Only update shot values for Vortel sessions (not Training or Event)
                 if (sessionType === 'VO') {
                     const config = DISCIPLINE_CONFIG[document.getElementById('edit-session-discipline').value];
                     
@@ -5179,27 +5160,38 @@
             calculateSummary();
         }
         
-        // Session Type Toggle
-        function toggleSessionType() {
-            const toggle = document.getElementById('session-type-toggle');
-            currentSessionType = toggle.checked ? 'TR' : 'VO';
+        // Session Type Selector
+        function setSessionType(type) {
+            currentSessionType = type;
+            document.getElementById('session-type').value = type;
+            
+            // Update button states
+            document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('type-btn-' + type.toLowerCase()).classList.add('active');
+            
             updateSessionTypeUI();
         }
         
         function updateSessionTypeUI() {
-            const isTraining = currentSessionType === 'TR';
             const targetsSection = document.getElementById('targets-section');
             const trainingOnly = document.getElementById('training-only');
+            const eventOnly = document.getElementById('event-only');
             const saveBtn = document.querySelector('.save-btn');
             
-            if (isTraining) {
-                targetsSection.style.display = 'none';
+            // Reset all sections
+            targetsSection.style.display = 'none';
+            trainingOnly.style.display = 'none';
+            eventOnly.style.display = 'none';
+            
+            if (currentSessionType === 'VO') {
+                targetsSection.style.display = 'block';
+                saveBtn.textContent = '💾 Speichern';
+            } else if (currentSessionType === 'TR') {
                 trainingOnly.style.display = 'block';
                 saveBtn.textContent = '💾 Training speichern';
-            } else {
-                targetsSection.style.display = 'block';
-                trainingOnly.style.display = 'none';
-                saveBtn.textContent = '💾 Speichern';
+            } else if (currentSessionType === 'EVT') {
+                eventOnly.style.display = 'block';
+                saveBtn.textContent = '💾 Event speichern';
             }
         }
         
@@ -5452,6 +5444,13 @@
                 const config = DISCIPLINE_CONFIG[currentDiscipline];
                 
                 // Collect session data
+                let notes = document.getElementById('session-notes').value;
+                if (currentSessionType === 'TR') {
+                    notes = document.getElementById('training-notes').value;
+                } else if (currentSessionType === 'EVT') {
+                    notes = document.getElementById('event-notes').value;
+                }
+                
                 const sessionData = {
                     user_id: currentUser.id,
                     date: document.getElementById('session-date').value,
@@ -5460,9 +5459,7 @@
                     weapon_id: document.getElementById('session-weapon').value || null,
                     ammunition_id: document.getElementById('session-ammunition').value || null,
                     location: document.getElementById('session-location').value || null,
-                    notes: currentSessionType === 'TR' 
-                        ? document.getElementById('training-notes').value 
-                        : document.getElementById('session-notes').value
+                    notes: notes
                 };
                 
                 // Insert session
@@ -5474,8 +5471,8 @@
                 
                 if (sessionError) throw sessionError;
                 
-                // If training, we're done
-                if (currentSessionType === 'TR') {
+                // If training or event, we're done (no shot results)
+                if (currentSessionType === 'TR' || currentSessionType === 'EVT') {
                     showSaveSuccess();
                     resetForm();
                     return;
@@ -5606,6 +5603,10 @@
             // Reset notes
             document.getElementById('session-notes').value = '';
             document.getElementById('training-notes').value = '';
+            document.getElementById('event-notes').value = '';
+            
+            // Reset session type to VO
+            setSessionType('VO');
             
             // Reset summary
             calculateSummary();
@@ -5644,6 +5645,7 @@
                     duellMode: duellMode,
                     notes: document.getElementById('session-notes')?.value,
                     trainingNotes: document.getElementById('training-notes')?.value,
+                    eventNotes: document.getElementById('event-notes')?.value,
                     timestamp: Date.now()
                 };
                 
@@ -5690,9 +5692,7 @@
                 
                 // Restore session type
                 if (data.sessionType) {
-                    currentSessionType = data.sessionType;
-                    document.getElementById('session-type-toggle').checked = (data.sessionType === 'TR');
-                    updateSessionTypeUI();
+                    setSessionType(data.sessionType);
                 }
                 
                 // Restore date (only if not older than today)
@@ -5720,6 +5720,9 @@
                 }
                 if (data.trainingNotes) {
                     document.getElementById('training-notes').value = data.trainingNotes;
+                }
+                if (data.eventNotes) {
+                    document.getElementById('event-notes').value = data.eventNotes;
                 }
                 
                 // Restore shot inputs after a short delay (to ensure grids are created)
