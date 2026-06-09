@@ -2931,21 +2931,33 @@
                 
                 if (error) throw error;
                 
-                // Fetch unfiltered sessions for L12M (independent of date filter)
-                let l12mQuery = supabase
+                // Fetch unfiltered sessions for L12M and year comparison (independent of date filter)
+                let unfilteredQuery = supabase
                     .from('sessions')
-                    .select('date')
+                    .select(`
+                        id,
+                        date,
+                        discipline,
+                        session_type,
+                        results (
+                            target_type,
+                            value
+                        ),
+                        duell_totals (
+                            total
+                        )
+                    `)
                     .eq('user_id', currentUser.id)
                     .eq('discipline', statsDiscipline)
                     .eq('session_type', 'VO');
                 
-                // Apply only weapon/ammo filters for L12M, NOT date filters
-                if (weaponFilter) l12mQuery = l12mQuery.eq('weapon_id', weaponFilter);
-                if (ammoFilter) l12mQuery = l12mQuery.eq('ammunition_id', ammoFilter);
+                // Apply only weapon/ammo filters, NOT date filters
+                if (weaponFilter) unfilteredQuery = unfilteredQuery.eq('weapon_id', weaponFilter);
+                if (ammoFilter) unfilteredQuery = unfilteredQuery.eq('ammunition_id', ammoFilter);
                 
-                const { data: l12mSessions, error: l12mError } = await l12mQuery;
+                const { data: unfilteredSessions, error: unfilteredError } = await unfilteredQuery;
                 
-                if (l12mError) console.error('Error loading L12M data:', l12mError);
+                if (unfilteredError) console.error('Error loading unfiltered data:', unfilteredError);
                 
                 loading.style.display = 'none';
                 
@@ -2965,13 +2977,13 @@
                 // Calculate L12M from unfiltered data (independent of date filter)
                 const oneYearAgo = new Date();
                 oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-                const l12mCount = l12mSessions 
-                    ? l12mSessions.filter(s => new Date(s.date) >= oneYearAgo).length 
+                const l12mCount = unfilteredSessions 
+                    ? unfilteredSessions.filter(s => new Date(s.date) >= oneYearAgo).length 
                     : 0;
                 document.getElementById('stats-l12m').textContent = l12mCount;
                 
-                // Year comparison
-                updateYearComparison(sessions);
+                // Year comparison (independent of date filter)
+                updateYearComparison(unfilteredSessions || []);
                 
                 // Create gauges
                 createGauges(statsData);
